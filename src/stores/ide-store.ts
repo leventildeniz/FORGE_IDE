@@ -153,6 +153,8 @@ type AISlice = {
 
   setChatMode: (mode: AIChatMode) => void;
   enqueueMessage: (text: string, attachments?: any[], contextPills?: any[]) => void;
+  removeQueuedMessage: (index: number) => void;
+  promoteQueuedMessage: (index: number) => void;
   compactChat: () => void;
   send: (
     text: string,
@@ -1804,6 +1806,28 @@ export const useIDEStore = create<IDEState>()(
           set((s) => ({
             messageQueue: [...s.messageQueue, { text, attachments, contextPills }],
           })),
+        removeQueuedMessage: (index: number) =>
+          set((s) => ({
+            messageQueue: s.messageQueue.filter((_, i) => i !== index),
+          })),
+        promoteQueuedMessage: (index: number) => {
+          const state = get();
+          const msg = state.messageQueue[index];
+          if (!msg) return;
+          
+          // Remove from queue
+          set((s) => ({
+            messageQueue: s.messageQueue.filter((_, i) => i !== index),
+          }));
+
+          // Interrupt current stream
+          state.stop();
+          
+          // Wait briefly for backend locks to clear, then send
+          setTimeout(() => {
+            get().send(msg.text, msg.attachments, msg.contextPills);
+          }, 800);
+        },
         pendingAttachments: [],
         addPendingAttachment: (f: File) =>
           set((s) => ({ pendingAttachments: [...s.pendingAttachments, f] })),

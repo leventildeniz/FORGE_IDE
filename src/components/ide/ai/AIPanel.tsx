@@ -31,6 +31,7 @@ import {
   Minimize2,
   Terminal,
   Bot as BotIcon,
+  FastForward,
 } from "lucide-react";
 import { useIDEStore } from "@/stores/ide-store";
 import { Button } from "@/components/ui/button";
@@ -87,6 +88,7 @@ export function AIPanel() {
 
   const [input, setInput] = useState("");
   const pendingAttachments = useIDEStore((s) => s.pendingAttachments);
+  const messageQueue = useIDEStore((s) => s.messageQueue);
   const addPendingAttachment = useIDEStore((s) => s.addPendingAttachment);
   const removePendingAttachment = useIDEStore((s) => s.removePendingAttachment);
   const clearPendingAttachments = useIDEStore((s) => s.clearPendingAttachments);
@@ -608,6 +610,48 @@ export function AIPanel() {
             )}
           </div>
         </div>
+
+        {/* Queued Messages UI */}
+        {messageQueue.length > 0 && (
+          <div className="flex flex-col gap-2 mb-3">
+            {messageQueue.map((msg, i) => (
+              <div key={i} className="flex flex-col gap-1.5 p-2.5 rounded-lg border border-orange-500/20 bg-orange-500/5 relative group">
+                <div className="flex items-center gap-2 mb-1 text-[10px] uppercase font-bold tracking-wider text-orange-500/80">
+                  <ListTodo className="size-3" /> Queued Message {i + 1}
+                </div>
+                <div className="text-xs text-white/80 line-clamp-3">
+                  {msg.text}
+                </div>
+                {msg.attachments && msg.attachments.length > 0 && (
+                  <div className="text-[10px] text-muted-foreground mt-1">
+                    + {msg.attachments.length} attachment(s)
+                  </div>
+                )}
+                
+                <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="size-6 bg-white/5 hover:bg-orange-500/20 hover:text-orange-400"
+                    title="Interrupt AI & Send Now"
+                    onClick={() => useIDEStore.getState().promoteQueuedMessage(i)}
+                  >
+                    <FastForward className="size-3.5" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="size-6 bg-white/5 hover:bg-destructive/20 hover:text-destructive"
+                    title="Remove from Queue"
+                    onClick={() => useIDEStore.getState().removeQueuedMessage(i)}
+                  >
+                    <XCircle className="size-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div
           className="relative flex flex-col rounded-xl border border-white/10 bg-[#18181b] focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 transition-all shadow-sm"
