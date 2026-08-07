@@ -133,7 +133,7 @@ export interface ChatSession {
   id: string;
   title: string;
   messages: ChatMessage[];
-  updatedAt: number;
+  updated_at: number; // Changed from updatedAt to match backend
 }
 
 type AISlice = {
@@ -1880,7 +1880,7 @@ export const useIDEStore = create<IDEState>()(
             // Optimistically update chat history UI
             set({
               chatHistory: [
-                { id: sessionId, title, messages: [], updatedAt: Date.now() },
+                { id: sessionId, title, messages: [], updated_at: Date.now() },
                 ...state.chatHistory,
               ],
             });

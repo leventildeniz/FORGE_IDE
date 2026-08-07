@@ -469,8 +469,8 @@ export function AIPanel() {
                         {chat.title}
                       </span>
                       <span className="text-[10px] text-muted-foreground">
-                        {new Date(chat.updatedAt).toLocaleDateString()}{" "}
-                        {new Date(chat.updatedAt).toLocaleTimeString([], {
+                        {new Date(chat.updated_at).toLocaleDateString()}{" "}
+                        {new Date(chat.updated_at).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
