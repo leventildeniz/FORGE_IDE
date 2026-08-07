@@ -205,10 +205,6 @@ export function AIPanel() {
     const text = input.trim();
     if (!text && pendingAttachments.length === 0 && contextPills.length === 0) return;
 
-    if (streaming) {
-      stop(); // Auto-stop current generation if user sends a new message
-    }
-
     if (text === "/compact") {
       compactChat();
       setInput("");
@@ -242,6 +238,37 @@ export function AIPanel() {
         });
       }),
     );
+
+    if (streaming) {
+      toast("AI is currently typing...", {
+        description: "Do you want to interrupt the current response, or queue this message for later?",
+        action: {
+          label: "Interrupt & Send",
+          onClick: () => {
+            stop();
+            // Wait for backend to clear the previous task muteces
+            setTimeout(() => {
+              send(text, processedAttachments, contextPills);
+            }, 800);
+            setInput("");
+            clearPendingAttachments();
+            setContextPills([]);
+          },
+        },
+        cancel: {
+          label: "Add to Queue",
+          onClick: () => {
+            useIDEStore.getState().enqueueMessage(text, processedAttachments, contextPills);
+            toast.success("Message queued. It will be sent automatically when the AI finishes.");
+            setInput("");
+            clearPendingAttachments();
+            setContextPills([]);
+          },
+        },
+        duration: 8000,
+      });
+      return;
+    }
 
     send(text, processedAttachments, contextPills);
     setInput("");

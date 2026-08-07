@@ -144,6 +144,7 @@ type AISlice = {
   isCompacting: boolean;
   changeSets: Record<string, ChangeSet>;
   chatMode: AIChatMode;
+  messageQueue: { text: string; attachments?: any[]; contextPills?: any[] }[];
 
   pendingAttachments: File[];
   addPendingAttachment: (f: File) => void;
@@ -151,6 +152,7 @@ type AISlice = {
   clearPendingAttachments: () => void;
 
   setChatMode: (mode: AIChatMode) => void;
+  enqueueMessage: (text: string, attachments?: any[], contextPills?: any[]) => void;
   compactChat: () => void;
   send: (
     text: string,
@@ -851,6 +853,18 @@ export const useIDEStore = create<IDEState>()(
                         },
                       });
                     }
+                  }
+
+                  // After updating state, check the queue if we are done
+                  if (isDone) {
+                    setTimeout(() => {
+                      const store = get();
+                      if (store.messageQueue.length > 0) {
+                        const nextMsg = store.messageQueue[0];
+                        set((s) => ({ messageQueue: s.messageQueue.slice(1) }));
+                        store.send(nextMsg.text, nextMsg.attachments, nextMsg.contextPills);
+                      }
+                    }, 500); // slight delay to allow backend task to completely unlock
                   }
 
                   return {
@@ -1785,6 +1799,11 @@ export const useIDEStore = create<IDEState>()(
         streaming: false,
         activeAiRequestId: null,
         changeSets: {},
+        messageQueue: [],
+        enqueueMessage: (text, attachments, contextPills) =>
+          set((s) => ({
+            messageQueue: [...s.messageQueue, { text, attachments, contextPills }],
+          })),
         pendingAttachments: [],
         addPendingAttachment: (f: File) =>
           set((s) => ({ pendingAttachments: [...s.pendingAttachments, f] })),
