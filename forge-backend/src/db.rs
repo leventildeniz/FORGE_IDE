@@ -24,6 +24,27 @@ pub fn init_db() -> Result<()> {
     let db_path = get_db_path();
     let conn = Connection::open(&db_path)?;
 
+    // Handle migrations for older schema versions
+    // Check if project_root exists in chat_sessions, if not add it
+    let mut stmt = conn.prepare("PRAGMA table_info(chat_sessions)")?;
+    let mut has_project_root = false;
+    let _ = stmt
+        .query_map([], |row| {
+            let name: String = row.get(1)?;
+            if name == "project_root" {
+                has_project_root = true;
+            }
+            Ok(())
+        })?
+        .count(); // Exhaust iterator
+
+    if !has_project_root {
+        let _ = conn.execute(
+            "ALTER TABLE chat_sessions ADD COLUMN project_root TEXT NOT NULL DEFAULT ''",
+            [],
+        );
+    }
+
     // Create environments table
     conn.execute(
         "CREATE TABLE IF NOT EXISTS environments (
