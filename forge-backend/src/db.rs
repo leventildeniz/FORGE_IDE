@@ -66,6 +66,7 @@ pub fn init_db() -> Result<()> {
         "CREATE TABLE IF NOT EXISTS chat_sessions (
             id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
+            project_root TEXT NOT NULL DEFAULT '',
             updated_at INTEGER NOT NULL
         )",
         [],
@@ -177,30 +178,34 @@ pub fn save_recent_project(proj: &ProjectRecord) -> Result<()> {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ChatSessionRecord {
-    pub id: String,
-    pub title: String,
-    pub updated_at: i64,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ChatMessageRecord {
     pub id: String,
     pub session_id: String,
     pub role: String,
-    pub content: String,
+    pub content: String, // Stored as JSON string
     pub created_at: i64,
 }
 
-pub fn get_chat_sessions() -> Result<Vec<ChatSessionRecord>> {
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ChatSessionRecord {
+    pub id: String,
+    pub title: String,
+    #[serde(default)]
+    pub project_root: String,
+    pub updated_at: i64,
+}
+
+pub fn get_chat_sessions(project_root: &str) -> Result<Vec<ChatSessionRecord>> {
     let conn = Connection::open(get_db_path())?;
     let mut stmt =
-        conn.prepare("SELECT id, title, updated_at FROM chat_sessions ORDER BY updated_at DESC")?;
-    let iter = stmt.query_map([], |row| {
+        conn.prepare("SELECT id, title, project_root, updated_at FROM chat_sessions WHERE project_root = ?1 OR project_root = '' ORDER BY updated_at DESC")?;
+
+    let iter = stmt.query_map(params![project_root], |row| {
         Ok(ChatSessionRecord {
             id: row.get(0)?,
             title: row.get(1)?,
-            updated_at: row.get(2)?,
+            project_root: row.get(2).unwrap_or_default(),
+            updated_at: row.get(3)?,
         })
     })?;
 
@@ -211,12 +216,12 @@ pub fn get_chat_sessions() -> Result<Vec<ChatSessionRecord>> {
     Ok(sessions)
 }
 
-pub fn save_chat_session(session: &ChatSessionRecord) -> Result<()> {
+pub fn save_chat_session(session: &ChatSessionRecord, project_root: &str) -> Result<()> {
     let conn = Connection::open(get_db_path())?;
     conn.execute(
-        "INSERT INTO chat_sessions (id, title, updated_at) VALUES (?1, ?2, ?3)
-         ON CONFLICT(id) DO UPDATE SET title=excluded.title, updated_at=excluded.updated_at",
-        params![session.id, session.title, session.updated_at],
+        "INSERT INTO chat_sessions (id, title, project_root, updated_at) VALUES (?1, ?2, ?3, ?4)
+         ON CONFLICT(id) DO UPDATE SET title=excluded.title, project_root=excluded.project_root, updated_at=excluded.updated_at",
+        params![session.id, session.title, project_root, session.updated_at],
     )?;
     Ok(())
 }

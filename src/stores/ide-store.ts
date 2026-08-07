@@ -346,15 +346,14 @@ export const useIDEStore = create<IDEState>()(
             },
           });
 
-          // Fetch chat sessions
-          wsManager.sendRequest({
-            type: BackendRequestType.GetChatSessions,
-            payload: {},
-          });
-
-          // If a project is already open, refresh its tree
+          // If a project is already open, refresh its tree and its isolated chat history
           if (get().projectRootPath) {
             get().fetchFileTree(get().projectRootPath as string);
+            
+            wsManager.sendRequest({
+              type: BackendRequestType.GetChatSessions,
+              payload: { project_root: get().projectRootPath },
+            });
           }
         },
         onClose: () => {
@@ -1234,12 +1233,23 @@ export const useIDEStore = create<IDEState>()(
                   },
                 })
                 .catch(console.error);
+                
+              // Fetch ONLY the chats belonging to this new project root
+              getWebSocketManager().sendRequest({
+                type: BackendRequestType.GetChatSessions,
+                payload: { project_root: path },
+              });
+            } else {
+              // Clear chats if no project is open
+              return { projectRootPath: null, tree: [], activePath: null, chatHistory: [], messages: [], activeChatId: null };
             }
 
             return {
               projectRootPath: path,
-              tree: path === null ? [] : state.tree,
-              activePath: path === null ? null : state.activePath,
+              tree: [],
+              activePath: null,
+              messages: [], // Clear active messages when switching projects
+              activeChatId: null,
             };
           }),
         createProject: async (name, path) => {
@@ -1858,6 +1868,7 @@ export const useIDEStore = create<IDEState>()(
             wsManager.sendRequest({
               type: BackendRequestType.SaveChatSession,
               payload: {
+                project_root: state.projectRootPath || "",
                 session: {
                   id: sessionId,
                   title,

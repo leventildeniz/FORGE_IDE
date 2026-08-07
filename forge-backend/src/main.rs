@@ -885,7 +885,10 @@ async fn handle_websocket_message(
             client_session.terminals.remove(&terminal_id);
             return None;
         }
-        messages::BackendRequest::GetChatSessions { request_id } => match db::get_chat_sessions() {
+        messages::BackendRequest::GetChatSessions {
+            project_root,
+            request_id,
+        } => match db::get_chat_sessions(&project_root) {
             Ok(sessions) => messages::BackendResponse::GetChatSessionsResponse {
                 sessions,
                 request_id,
@@ -897,8 +900,9 @@ async fn handle_websocket_message(
         },
         messages::BackendRequest::SaveChatSession {
             session,
+            project_root,
             request_id,
-        } => match db::save_chat_session(&session) {
+        } => match db::save_chat_session(&session, &project_root) {
             Ok(_) => messages::BackendResponse::SaveChatSessionResponse { request_id },
             Err(e) => messages::BackendResponse::Error {
                 message: format!("Failed to save chat session: {}", e),

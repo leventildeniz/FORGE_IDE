@@ -3,10 +3,19 @@ Description=Forge IDE Backend
 After=network.target
 
 [Service]
-ExecStart=/bin/bash -c "cd /home/levent/FORGE_IDE/forge-backend && cargo run"
-WorkingDirectory=/home/levent/FORGE_IDE/forge-backend
-Restart=always
+Type=simple
 User=levent
+WorkingDirectory=/home/levent/FORGE_IDE/forge-backend
+ExecStart=/home/levent/FORGE_IDE/forge-backend/target/release/forge-backend
+Restart=always
+RestartSec=2
+
+# OOM (Out Of Memory) Killer koruması
+OOMScoreAdjust=-1000
+# Sınırsız bellek tahsisine izin ver
+LimitAS=infinity
+# Sınırsız çekirdek dökümüne izin ver (hata yakalamak için)
+LimitCORE=infinity
 
 [Install]
 WantedBy=multi-user.target

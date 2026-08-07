@@ -241,8 +241,8 @@ export type BackendRequest =
         request_id?: string;
       };
     }
-  | { type: BackendRequestType.GetChatSessions; payload: { request_id?: string } }
-  | { type: BackendRequestType.SaveChatSession; payload: { session: any; request_id?: string } }
+  | { type: BackendRequestType.GetChatSessions; payload: { project_root: string; request_id?: string } }
+  | { type: BackendRequestType.SaveChatSession; payload: { session: any; project_root: string; request_id?: string } }
   | { type: BackendRequestType.DeleteChatSession; payload: { id: string; request_id?: string } }
   | {
       type: BackendRequestType.GetChatMessages;

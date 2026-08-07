@@ -3,10 +3,13 @@ Description=Forge IDE UI
 After=network.target
 
 [Service]
-ExecStart=/bin/bash -c "/usr/local/bin/bun run dev"
-WorkingDirectory=/home/levent/FORGE_IDE
-Restart=always
+Type=simple
 User=levent
+WorkingDirectory=/home/levent/FORGE_IDE
+# Tam olarak 'which bun' komutundan dönen yolu kullanıyoruz
+ExecStart=/usr/local/bin/bun run dev --host
+Restart=always
+RestartSec=2
 
 [Install]
 WantedBy=multi-user.target

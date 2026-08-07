@@ -205,10 +205,12 @@ pub enum BackendRequest {
         terminal_id: String,
     },
     GetChatSessions {
+        project_root: String,
         request_id: Option<String>,
     },
     SaveChatSession {
         session: super::db::ChatSessionRecord,
+        project_root: String,
         request_id: Option<String>,
     },
     DeleteChatSession {

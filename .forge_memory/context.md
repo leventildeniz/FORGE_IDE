@@ -86,12 +86,23 @@ Build a Local-First LLM-powered IDE that treats LLMs as "Architects" rather than
 	- [x] **Git Push Diagnostics (Fake Push Solved):** Added `GIT_TERMINAL_PROMPT=0` and `GIT_SSH_COMMAND="ssh -o BatchMode=yes"` to prevent terminal hangs on invalid PAT/SSH. Implemented proper 401/403 error parsing to report actual push failures to the UI, and added logic to perform a "Local Commit Only" fallback when no remote URL is configured.
 	- [x] **Architectural Decision (Cloud Deployments):** Dropped the idea of adding CLI-based deployments (Vercel/Netlify) from within the IDE. It introduces unnecessary friction and violates the lean IDE philosophy. Modern CI/CD should rely on the Git push pipeline natively.
 
-	### Phase 7: Observability & Telemetry (Active)
+	### Phase 7: Observability & Telemetry (✅ COMPLETELY FINISHED)
 	- [x] **Context & Token Telemetry Dashboard:** Repurposed the unused "More" tab into an AI Telemetry panel. Visualizes the LLM's "State of Mind" with a live budget stack bar (SYS, KNW, HST, FILE) and real-time inference updates via the `TelemetryUpdate` WebSocket message.
-	- [x] **UI/UX Polish:** Fixed AI Panel horizontal resizing (`maxSize` increased to 70%) and paused auto-scrolling when the user scrolls up to read past messages.
+	- [x] **UI/UX Polish:** Fixed AI Panel horizontal resizing (`maxSize` increased to 80%) and paused auto-scrolling when the user scrolls up to read past messages.
 	- [x] **ChangeSet Parsing Fix:** Enhanced the frontend markdown parser. Now, even if the model forgets the language tag (e.g., just ` ``` ` instead of ` ```rust `), as long as a valid file path comment (e.g., `// src/main.rs`) is present, it correctly generates the Apply/Reject UI card.
-	- [ ] **Dynamic Debug Logging:** Rust backend is currently spamming `cargo run` stdout with debug prints. Implement a "Debug Mode" toggle in the Frontend Settings (default off) that dynamically controls the Rust backend's log level, ensuring a clean terminal for normal use and verbose logging only when requested.
-	- [ ] **Final Code Cleanup (Phase 8):** Remove all remaining mock data, unused lines, and perform structural optimizations. *(Pending manual project backup by the user before execution).*
+
+	### Phase 8: Hardening, Cleanup & UX Polish (✅ COMPLETELY FINISHED)
+	- [x] **Git Pull Implementation:** Added robust `git pull` functionality with `git stash push --include-untracked` and `git stash pop` to gracefully handle pull conflicts caused by auto-generated files (like `.forge/knowledge`). Solved "unborn branch" and "untracked files" abort issues.
+	- [x] **Master Password Lock Screen:** Implemented a full-page IDE Lock Screen using Zustand. The workspace requires a master password to load, protecting the local server from unauthorized network access.
+	- [x] **Dynamic Debug Logging:** Replaced massive Rust backend `println!` spam with a `debug_log!` macro. Hooked this up to a "Developer Mode" toggle in `Configure > General` so the backend runs completely silent by default.
+	- [x] **AI Chat Message Queue & Interrupt:** Replaced abrupt stops with a Zed-style Queue system. If the user types while the AI is streaming, they get a toast to either "Interrupt & Send" or "Add to Queue". Queued messages appear visually above the chat input with options to skip or cancel.
+	- [x] **State Collision Bug (Nested Set):** Fixed a critical race condition in `ide-store.ts` where nested `set()` calls during Markdown parsing were wiping out `ChangeSetCard` elements from the AI Chat view.
+	- [x] **Mock Data & Artifact Eradication:** Cleaned up all `SAMPLE_TREE`, hardcoded Lovable variables, sahte (mock) problem/output panels, and deleted hundreds of unused `.Identifier` metadata files. Rust `cargo fix` executed to achieve 0 Warnings / 0 Errors.
+	- [x] **Visual Identity Update:** Replaced Lovable default logos and heart icons with the custom `Anvil` (Forge) SVG icon and removed "Gemma 4 31B" hardcoded text.
+
+	### Phase 9: Documentation & Release (Pending)
+	- [ ] **README.md Overhaul:** Write a comprehensive guide explaining the architecture, the Trinity Agent system, and installation steps.
+	- [ ] **Release Preparation:** Final package and launch readiness.
 
 ---
 
