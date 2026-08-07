@@ -576,10 +576,16 @@ export const useIDEStore = create<IDEState>()(
               const now = Date.now();
               if (now - lastStreamUpdate > 100 || isDone) {
                 lastStreamUpdate = now;
-                if (isDone) set({ activeAiRequestId: null });
 
                 set((state) => {
-                  if (!state.streaming) return state; // If stopped manually, ignore chunks
+                  if (state.activeAiRequestId !== msgId && !isDone) {
+                    return state; // Ignore chunks from older requests
+                  }
+
+                  if (isDone && state.activeAiRequestId === msgId) {
+                    // Only clear the global active request ID if it belongs to THIS message
+                    state.activeAiRequestId = null; 
+                  }
 
                   const newMessages = state.messages.map((m) => {
                     const bufferChunk = streamBuffer[msgId];

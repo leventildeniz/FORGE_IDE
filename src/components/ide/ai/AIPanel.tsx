@@ -205,6 +205,10 @@ export function AIPanel() {
     const text = input.trim();
     if (!text && pendingAttachments.length === 0 && contextPills.length === 0) return;
 
+    if (streaming) {
+      stop(); // Auto-stop current generation if user sends a new message
+    }
+
     if (text === "/compact") {
       compactChat();
       setInput("");
