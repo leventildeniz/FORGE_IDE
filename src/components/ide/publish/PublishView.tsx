@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useIDEStore } from "@/stores/ide-store";
+import { useShallow } from "zustand/react/shallow";
 import { toast } from "sonner";
 import { BackendRequestType } from "@/types/backend-messages";
 import { getWebSocketManager } from "@/lib/backend-websocket";
@@ -40,7 +41,17 @@ export function PublishView() {
     initGitRepo,
     addGitRemote,
     removeGitRemote,
-  } = useIDEStore();
+  } = useIDEStore(useShallow((state) => ({
+    gitStatus: state.gitStatus,
+    fetchGitStatus: state.fetchGitStatus,
+    commitChanges: state.commitChanges,
+    pullChanges: state.pullChanges,
+    pushChanges: state.pushChanges,
+    isPushing: state.isPushing,
+    remoteUrl: state.remoteUrl,
+    addGitRemote: state.addGitRemote,
+    removeGitRemote: state.removeGitRemote,
+  })));
 
   const [remoteInput, setRemoteInput] = useState("");
   const [patInput, setPatInput] = useState("");

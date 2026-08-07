@@ -64,17 +64,33 @@ pub fn spawn_local_terminal(
     })?;
 
     let cmd = if is_wsl {
-        let mut c = CommandBuilder::new("wsl.exe");
-        c.cwd(cwd); // Not sure if wsl.exe respects cwd this way, but we try
-        c
+        #[cfg(target_os = "windows")]
+        {
+            let mut c = CommandBuilder::new("wsl.exe");
+            c.cwd(cwd); // Not sure if wsl.exe respects cwd this way, but we try
+            c
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            // If the backend is running directly in Linux/WSL, we don't need wsl.exe
+            // to spawn a terminal, we can just use bash directly.
+            let mut c = CommandBuilder::new("bash");
+            c.cwd(cwd);
+            c
+        }
     } else {
         #[cfg(target_os = "windows")]
-        let mut c = CommandBuilder::new("powershell.exe");
+        {
+            let mut c = CommandBuilder::new("powershell.exe");
+            c.cwd(cwd);
+            c
+        }
         #[cfg(not(target_os = "windows"))]
-        let mut c = CommandBuilder::new("bash");
-
-        c.cwd(cwd);
-        c
+        {
+            let mut c = CommandBuilder::new("bash");
+            c.cwd(cwd);
+            c
+        }
     };
 
     let _child = pair.slave.spawn_command(cmd)?;

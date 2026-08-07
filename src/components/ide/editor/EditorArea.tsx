@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { X, ChevronRight, Circle, SplitSquareHorizontal, Anvil } from "lucide-react";
 import { useIDEStore } from "@/stores/ide-store";
+import { useShallow } from "zustand/react/shallow";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const MonacoEditor = lazy(() =>
@@ -8,7 +9,16 @@ const MonacoEditor = lazy(() =>
 );
 
 export function EditorArea() {
-  const { tabs, activePath, setActive, closeTab, updateContent, minimap } = useIDEStore();
+  const { tabs, activePath, setActive, closeTab, updateContent, minimap } = useIDEStore(
+    useShallow((state) => ({
+      tabs: state.tabs,
+      activePath: state.activePath,
+      setActive: state.setActive,
+      closeTab: state.closeTab,
+      updateContent: state.updateContent,
+      minimap: state.minimap,
+    }))
+  );
   const active = tabs.find((t) => t.path === activePath);
 
   return (

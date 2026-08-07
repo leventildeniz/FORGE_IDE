@@ -1,4 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
+import { useMemo } from "react";
 import {
   Command,
   CommandDialog,
@@ -10,6 +11,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { useIDEStore } from "@/stores/ide-store";
+import { useShallow } from "zustand/react/shallow";
 import { flattenFileNodes } from "@/lib/utils"; // Updated import to use our new utility function
 import {
   FileCode,
@@ -32,9 +34,20 @@ export function CommandMenu() {
     toggleAi,
     toggleBottom,
     saveActive,
-  } = useIDEStore();
+  } = useIDEStore(useShallow((state) => ({
+    commandOpen: state.commandOpen,
+    setCommandOpen: state.setCommandOpen,
+    tree: state.tree,
+    openFile: state.openFile,
+    toggleExplorer: state.toggleExplorer,
+    toggleAi: state.toggleAi,
+    toggleBottom: state.toggleBottom,
+    saveActive: state.saveActive,
+  })));
   const navigate = useNavigate();
-  const files = flattenFileNodes(tree); // Use flattenFileNodes with the real tree state
+
+  // Memoize the flattened files so we don't recalculate on every render
+  const files = useMemo(() => flattenFileNodes(tree), [tree]);
 
   function run(fn: () => void) {
     setCommandOpen(false);

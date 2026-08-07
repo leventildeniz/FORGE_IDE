@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { FileNode, Environment } from "@/types/ide";
 import { useIDEStore } from "@/stores/ide-store";
+import { useShallow } from "zustand/react/shallow";
 import { Input } from "@/components/ui/input";
 import {
   ContextMenu,
@@ -44,7 +45,19 @@ export function FileExplorer() {
     sftpListDir,
     createFile,
     createDirectory,
-  } = useIDEStore();
+  } = useIDEStore(useShallow((state) => ({
+    projectName: state.projectName,
+    tree: state.tree,
+    openFile: state.openFile,
+    activePath: state.activePath,
+    fetchFileTree: state.fetchFileTree,
+    projectRootPath: state.projectRootPath,
+    activeEnvId: state.activeEnvId,
+    environments: state.environments,
+    sftpListDir: state.sftpListDir,
+    createFile: state.createFile,
+    createDirectory: state.createDirectory,
+  })));
   const [query, setQuery] = useState("");
 
   const activeEnvironment = environments.find((env) => env.id === activeEnvId);
@@ -258,7 +271,7 @@ function TreeNode({
   isSshEnvironment: boolean;
   activeEnvironment: Environment | undefined;
 }) {
-  const [open, setOpen] = useState(depth < 1 || Boolean(filter));
+  const [open, setOpen] = useState(Boolean(filter));
   const {
     sftpCreateDir,
     sftpRemoveDir,
@@ -269,7 +282,17 @@ function TreeNode({
     deletePath,
     renamePath,
     duplicateFile,
-  } = useIDEStore();
+  } = useIDEStore(useShallow((state) => ({
+    sftpCreateDir: state.sftpCreateDir,
+    sftpRemoveDir: state.sftpRemoveDir,
+    sftpRemoveFile: state.sftpRemoveFile,
+    sftpRename: state.sftpRename,
+    createDirectory: state.createDirectory,
+    createFile: state.createFile,
+    deletePath: state.deletePath,
+    renamePath: state.renamePath,
+    duplicateFile: state.duplicateFile,
+  })));
 
   // console.log(`TreeNode: Node: ${node.name}, Path: ${node.path}, is_dir: ${node.is_dir}, Children count: ${node.children ? node.children.length : 'N/A'}`);
 

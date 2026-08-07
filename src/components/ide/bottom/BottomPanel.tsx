@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useIDEStore } from "@/stores/ide-store";
+import { useShallow } from "zustand/react/shallow";
 import type { BottomTab, ChangeSet } from "@/types/ide";
 import { Button } from "@/components/ui/button";
 import { TerminalPanel } from "@/components/ide/terminal/TerminalPanel";
@@ -26,7 +27,13 @@ const TABS: { id: BottomTab; label: string; icon: React.ComponentType<{ classNam
   ];
 
 export function BottomPanel() {
-  const { bottomTab, setBottomTab, toggleBottom } = useIDEStore();
+  const { bottomTab, setBottomTab, toggleBottom } = useIDEStore(
+    useShallow((state) => ({
+      bottomTab: state.bottomTab,
+      setBottomTab: state.setBottomTab,
+      toggleBottom: state.toggleBottom,
+    }))
+  );
   return (
     <div className="flex h-full min-h-0 flex-col border-t border-border bg-panel">
       <div className="flex h-9 shrink-0 items-center border-b border-border pl-2 pr-1">

@@ -14,6 +14,7 @@ import {
   Lock,
 } from "lucide-react";
 import { useIDEStore } from "@/stores/ide-store";
+import { useShallow } from "zustand/react/shallow";
 import type {
   AIModel,
   ConfigureTab,
@@ -52,7 +53,10 @@ const tabs: {
 ];
 
 export function ConfigureView() {
-  const { configureTab, setConfigureTab } = useIDEStore();
+  const { configureTab, setConfigureTab } = useIDEStore(useShallow((state) => ({
+    configureTab: state.configureTab,
+    setConfigureTab: state.setConfigureTab,
+  })));
   return (
     <div className="flex h-full min-h-0 bg-background">
       <aside className="w-56 shrink-0 border-r border-border bg-panel p-3">
@@ -101,7 +105,13 @@ const envIcon: Record<EnvironmentKind, React.ComponentType<{ className?: string 
 
 function EnvironmentsPane() {
   const { environments, activeEnvId, setActiveEnv, addEnvironment, removeEnvironment } =
-    useIDEStore();
+    useIDEStore(useShallow((state) => ({
+      environments: state.environments,
+      activeEnvId: state.activeEnvId,
+      setActiveEnv: state.setActiveEnv,
+      addEnvironment: state.addEnvironment,
+      removeEnvironment: state.removeEnvironment,
+    })));
   return (
     <section className="space-y-4">
       <PaneHeader
@@ -327,7 +337,13 @@ function AddEnvironmentDialog({
 /* -------------------- Models -------------------- */
 
 function ModelsPane() {
-  const { models, activeModelId, setActiveModel, addModel, removeModel } = useIDEStore();
+  const { models, activeModelId, setActiveModel, addModel, removeModel } = useIDEStore(useShallow((state) => ({
+    models: state.models,
+    activeModelId: state.activeModelId,
+    setActiveModel: state.setActiveModel,
+    addModel: state.addModel,
+    removeModel: state.removeModel,
+  })));
   return (
     <section className="space-y-4">
       <PaneHeader

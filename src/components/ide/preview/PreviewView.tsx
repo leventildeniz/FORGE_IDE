@@ -15,6 +15,7 @@ import {
   Camera,
 } from "lucide-react";
 import { useIDEStore } from "@/stores/ide-store";
+import { useShallow } from "zustand/react/shallow";
 import type { PreviewDevice } from "@/types/ide";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -46,7 +47,14 @@ export function PreviewView() {
     previewForward,
     previewRefresh,
     addPendingAttachment,
-  } = useIDEStore();
+  } = useIDEStore(useShallow((state) => ({
+    previewRunning: state.previewRunning,
+    previewUrl: state.previewUrl,
+    setPreviewUrl: state.setPreviewUrl,
+    setPreviewRunning: state.setPreviewRunning,
+    previewRefresh: state.previewRefresh,
+    addPendingAttachment: state.addPendingAttachment,
+  })));
 
   const [draft, setDraft] = useState(previewUrl);
   const [isCapturing, setIsCapturing] = useState(false);

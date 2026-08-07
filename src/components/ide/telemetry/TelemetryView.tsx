@@ -1,8 +1,12 @@
 import { useIDEStore } from "@/stores/ide-store";
+import { useShallow } from "zustand/react/shallow";
 import { Activity, Cpu, Database, Network, Clock, Zap } from "lucide-react";
 
 export function TelemetryView() {
-  const { isConnected, telemetry } = useIDEStore();
+  const { isConnected, telemetry } = useIDEStore(useShallow((state) => ({
+    isConnected: state.isConnected,
+    telemetry: state.telemetry,
+  })));
 
   const formatNumber = (num: number) => new Intl.NumberFormat("en-US").format(Math.round(num));
 

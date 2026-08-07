@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import {
   Send,
   Copy,
@@ -34,6 +34,7 @@ import {
   FastForward,
 } from "lucide-react";
 import { useIDEStore } from "@/stores/ide-store";
+import { useShallow } from "zustand/react/shallow";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -84,7 +85,27 @@ export function AIPanel() {
     setActiveModel,
     profiles,
     tree,
-  } = useIDEStore();
+  } = useIDEStore(useShallow((state) => ({
+    messages: state.messages,
+    chatHistory: state.chatHistory,
+    activeChatId: state.activeChatId,
+    loadChat: state.loadChat,
+    deleteChat: state.deleteChat,
+    streaming: state.streaming,
+    stop: state.stop,
+    clear: state.clear,
+    regenerate: state.regenerate,
+    send: state.send,
+    compactChat: state.compactChat,
+    setBottomTab: state.setBottomTab,
+    chatMode: state.chatMode,
+    setChatMode: state.setChatMode,
+    models: state.models,
+    activeModelId: state.activeModelId,
+    setActiveModel: state.setActiveModel,
+    profiles: state.profiles,
+    tree: state.tree,
+  })));
 
   const [input, setInput] = useState("");
   const pendingAttachments = useIDEStore((s) => s.pendingAttachments);
@@ -156,10 +177,15 @@ export function AIPanel() {
     return results;
   }, []);
 
-  const knowledgeFiles = extractKnowledgeFiles(tree);
-  const filteredKnowledgeFiles = knowledgeFiles.filter((f) =>
-    f.name?.toLowerCase().includes((mentionQuery || "").toLowerCase()),
-  );
+  const knowledgeFiles = useMemo(() => {
+    return extractKnowledgeFiles(tree);
+  }, [tree, extractKnowledgeFiles]);
+
+  const filteredKnowledgeFiles = useMemo(() => {
+    return knowledgeFiles.filter((f) =>
+      f.name?.toLowerCase().includes((mentionQuery || "").toLowerCase()),
+    );
+  }, [knowledgeFiles, mentionQuery]);
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;

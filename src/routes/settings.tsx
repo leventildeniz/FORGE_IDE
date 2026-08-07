@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIDEStore } from "@/stores/ide-store";
+import { useShallow } from "zustand/react/shallow";
 import {
   Select,
   SelectContent,
@@ -64,7 +65,22 @@ function SettingsPage() {
     removeProfile,
     contextSettings,
     updateContextSettings,
-  } = useIDEStore();
+  } = useIDEStore(useShallow((state) => ({
+    appPasswordHash: state.appPasswordHash,
+    setAppPasswordHash: state.setAppPasswordHash,
+    environments: state.environments,
+    addEnvironment: state.addEnvironment,
+    removeEnvironment: state.removeEnvironment,
+    models: state.models,
+    addModel: state.addModel,
+    updateModel: state.updateModel,
+    removeModel: state.removeModel,
+    profiles: state.profiles,
+    addProfile: state.addProfile,
+    removeProfile: state.removeProfile,
+    contextSettings: state.contextSettings,
+    updateContextSettings: state.updateContextSettings,
+  })));
 
   const [isAddModelOpen, setIsAddModelOpen] = useState(false);
   const [newModel, setNewModel] = useState<Partial<AIModel>>({
