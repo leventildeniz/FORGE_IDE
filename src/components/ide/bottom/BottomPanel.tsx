@@ -71,54 +71,46 @@ export function BottomPanel() {
 }
 
 function ProblemsView() {
-  const problems = [
-    {
-      file: "src/components/LoginForm.tsx",
-      line: 12,
-      severity: "warning",
-      msg: "'password' is declared but never validated.",
-    },
-    {
-      file: "src/pages/index.tsx",
-      line: 4,
-      severity: "info",
-      msg: "Consider extracting inline handler to a named function.",
-    },
-  ];
+  const problems: any[] = [];
   return (
-    <ul className="h-full divide-y divide-border overflow-auto text-xs">
-      {problems.map((p, i) => (
-        <li key={i} className="flex items-center gap-3 px-3 py-2">
-          <AlertCircle
-            className={`size-3.5 ${
-              p.severity === "warning" ? "text-[color:var(--diff-remove)]" : "text-primary"
-            }`}
-          />
-          <span className="font-mono text-muted-foreground">{p.file}</span>
-          <span className="font-mono text-muted-foreground">:{p.line}</span>
-          <span className="text-foreground">{p.msg}</span>
-        </li>
-      ))}
-      {problems.length === 0 && (
-        <li className="p-6 text-center text-muted-foreground">No problems detected</li>
+    <div className="h-full overflow-auto">
+      {problems.length === 0 ? (
+        <div className="grid h-full place-items-center text-xs text-muted-foreground opacity-50 select-none font-sans">
+          No problems detected in workspace
+        </div>
+      ) : (
+        <ul className="h-full divide-y divide-border overflow-auto text-xs">
+          {problems.map((p, i) => (
+            <li key={i} className="flex items-center gap-3 px-3 py-2">
+              <AlertCircle
+                className={`size-3.5 ${
+                  p.severity === "warning" ? "text-[color:var(--diff-remove)]" : "text-primary"
+                }`}
+              />
+              <span className="font-mono text-muted-foreground">{p.file}</span>
+              <span className="font-mono text-muted-foreground">:{p.line}</span>
+              <span className="text-foreground">{p.msg}</span>
+            </li>
+          ))}
+        </ul>
       )}
-    </ul>
+    </div>
   );
 }
 
 function OutputView() {
-  const lines = [
-    "[dev] Starting development server…",
-    "[dev] Local:   http://localhost:3000",
-    "[dev] Ready in 412 ms",
-    "[hmr] page reloaded",
-    "[dev] Compiled successfully",
-  ];
+  const lines: string[] = [];
   return (
     <div className="h-full overflow-auto bg-editor px-3 py-2 font-mono text-xs text-muted-foreground">
-      {lines.map((l, i) => (
-        <div key={i}>{l}</div>
-      ))}
+      {lines.length === 0 ? (
+        <div className="grid h-full place-items-center text-xs text-muted-foreground opacity-50 select-none font-sans">
+          No output to display
+        </div>
+      ) : (
+        lines.map((l, i) => (
+          <div key={i}>{l}</div>
+        ))
+      )}
     </div>
   );
 }
