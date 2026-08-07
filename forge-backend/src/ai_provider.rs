@@ -6,7 +6,7 @@ use tokio::sync::mpsc::UnboundedSender;
 use tokio_util::sync::CancellationToken;
 use warp::ws::Message;
 
-use crate::messages::{BackendResponse, Environment};
+use crate::messages::BackendResponse;
 
 #[derive(Serialize)]
 struct ChatCompletionRequest {

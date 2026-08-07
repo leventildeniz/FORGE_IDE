@@ -400,7 +400,7 @@ pub async fn delete_path(
 }
 
 pub async fn get_suggested_project_roots(
-    environment_id: Option<String>,
+    _environment_id: Option<String>,
     active_environment_details: Option<messages::Environment>,
 ) -> Result<Vec<FileNode>, String> {
     let mut roots = Vec::new();
@@ -533,7 +533,7 @@ pub async fn export_project_to_zip(
     let root_path_clone = root_path.to_path_buf();
 
     // We run the zip blocking operations inside a spawn_blocking block to prevent blocking the async runtime
-    let result = tokio::task::spawn_blocking(move || -> Result<(), String> {
+    let _result = tokio::task::spawn_blocking(move || -> Result<(), String> {
         let file = File::create(&zip_path_clone)
             .map_err(|e| format!("Failed to create zip file: {}", e))?;
         let mut zip = zip::ZipWriter::new(file);

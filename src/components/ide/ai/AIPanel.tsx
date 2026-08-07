@@ -910,10 +910,12 @@ const Message = React.memo(function Message({
   );
 });
 
+const remarkPluginsList = [remarkGfm];
+
 function PartView({
   part,
-  onReview,
   isUser,
+  onReview,
   isGenerating,
 }: {
   part: ChatMessagePart;
@@ -931,7 +933,7 @@ function PartView({
           </span>
         </div>
         <div className="p-4 prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed text-foreground/90">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{part.text}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={remarkPluginsList}>{part.text}</ReactMarkdown>
         </div>
       </div>
     );
@@ -952,7 +954,7 @@ function PartView({
         className={`prose prose-sm max-w-none ${isUser ? "prose-invert prose-p:leading-relaxed prose-pre:bg-primary-foreground/10" : "dark:prose-invert prose-p:leading-relaxed"}`}
       >
         <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
+          remarkPlugins={remarkPluginsList}
           components={{
             code({ node, inline, className, children, ...props }: any) {
               const match = /language-(\w+)/.exec(className || "");
@@ -1023,7 +1025,7 @@ function PartView({
           </span>
         </summary>
         <div className="px-3 pb-3 pt-0 text-xs overflow-x-auto break-words prose prose-sm prose-invert max-w-none prose-p:my-0.5 prose-p:leading-snug prose-ul:my-0.5 prose-li:my-0 opacity-90">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          <ReactMarkdown remarkPlugins={remarkPluginsList}>
             {part.text.replace(/\n\s*\n+/g, "\n\n")}
           </ReactMarkdown>
         </div>

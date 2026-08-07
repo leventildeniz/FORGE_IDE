@@ -63,7 +63,7 @@ pub fn spawn_local_terminal(
         pixel_height: 0,
     })?;
 
-    let mut cmd = if is_wsl {
+    let cmd = if is_wsl {
         let mut c = CommandBuilder::new("wsl.exe");
         c.cwd(cwd); // Not sure if wsl.exe respects cwd this way, but we try
         c

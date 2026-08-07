@@ -1,7 +1,6 @@
 use html2md::parse_html;
 use reqwest;
 use scraper::{Html, Selector};
-use std::path::Path;
 
 pub async fn search_web(query: &str) -> Result<String, String> {
     let client = reqwest::Client::builder()

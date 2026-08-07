@@ -1,5 +1,4 @@
 use serde_json::{Value, json};
-use std::process::Command;
 use tokio;
 
 pub async fn get_git_status(
@@ -108,7 +107,7 @@ pub async fn get_git_status(
 
 pub async fn get_git_diff(project_root: &str) -> Result<String, String> {
     // Unstaged changes
-    let mut diff_cmd = tokio::process::Command::new("git")
+    let diff_cmd = tokio::process::Command::new("git")
         .arg("diff")
         .current_dir(project_root)
         .output()

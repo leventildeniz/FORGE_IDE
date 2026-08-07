@@ -1,4 +1,4 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::AtomicBool;
 pub static DEBUG_LOG: AtomicBool = AtomicBool::new(false);
 
 #[macro_export]
@@ -14,7 +14,7 @@ use futures_util::{SinkExt, StreamExt};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::sync::{Mutex, RwLock, mpsc};
+use tokio::sync::{Mutex, mpsc};
 use tokio::time::{Duration, interval};
 use tokio_util::sync::CancellationToken;
 use warp::Filter;
@@ -790,9 +790,9 @@ async fn handle_websocket_message(
                 };
 
                 if let Some(conn) = conn_handle {
-                    let mut handle = conn.lock().await;
+                    let handle = conn.lock().await;
                     match handle.channel_open_session().await {
-                        Ok(mut channel) => {
+                        Ok(channel) => {
                             if let Err(e) =
                                 channel.request_pty(true, "xterm", 80, 24, 0, 0, &[]).await
                             {
@@ -976,7 +976,7 @@ async fn handle_websocket_message(
                 };
 
                 if let Some(conn) = conn_handle {
-                    let mut handle = conn.lock().await;
+                    let handle = conn.lock().await;
                     if let Ok(mut channel) = handle.channel_open_session().await {
                         let base = project_root.trim_end_matches('/');
                         let cmd = format!(
@@ -1085,7 +1085,7 @@ async fn handle_websocket_message(
                 };
                 if let (Some(conn), Some(sftp)) = (conn_handle, sftp) {
                     // Pre-create the directory safely via shell
-                    let mut handle = conn.lock().await;
+                    let handle = conn.lock().await;
                     if let Ok(mut channel) = handle.channel_open_session().await {
                         let cmd = format!(
                             "mkdir -p '{}/.forge/knowledge'",
@@ -1264,7 +1264,7 @@ async fn handle_websocket_message(
                         };
 
                         if let (Some(conn), Some(sftp)) = (conn_handle, sftp) {
-                            let mut handle = conn.lock().await;
+                            let handle = conn.lock().await;
                             if let Ok(mut channel) = handle.channel_open_session().await {
                                 let cmd = format!(
                                     "mkdir -p '{}/.forge/knowledge'",
@@ -1394,7 +1394,7 @@ async fn handle_websocket_message(
                         };
 
                         if let (Some(conn), Some(sftp)) = (conn_handle, sftp) {
-                            let mut handle = conn.lock().await;
+                            let handle = conn.lock().await;
                             if let Ok(mut channel) = handle.channel_open_session().await {
                                 let cmd = format!(
                                     "mkdir -p '{}/.forge/knowledge'",
@@ -1496,8 +1496,8 @@ async fn handle_websocket_message(
         messages::BackendRequest::RunCodeAgent {
             action,
             project_root,
-            environment_id,
-            active_environment_details,
+            environment_id: _,
+            active_environment_details: _,
             request_id,
         } => {
             let response = match knowledge::run_code_agent(&action, &project_root).await {
