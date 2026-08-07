@@ -533,6 +533,9 @@ function AddModelDialog({ onAdd }: { onAdd: (m: Omit<AIModel, "id">) => void }) 
 
 /* -------------------- General -------------------- */
 
+import { getWebSocketManager } from "@/lib/backend-websocket";
+import { BackendRequestType } from "@/types/backend-messages";
+
 function GeneralPane() {
   const setAppLocked = useIDEStore((s) => s.setAppLocked);
   const setAppPasswordHash = useIDEStore((s) => s.setAppPasswordHash);
@@ -555,9 +558,34 @@ function GeneralPane() {
     }
   };
 
+  const [debugLogEnabled, setDebugLogEnabled] = useState(false);
+
+  const toggleDebugLog = () => {
+    const newState = !debugLogEnabled;
+    setDebugLogEnabled(newState);
+    getWebSocketManager().sendRequest({
+      type: BackendRequestType.SetDebugLog as any,
+      payload: { enabled: newState }
+    });
+  };
+
   return (
     <section className="space-y-6">
       <PaneHeader title="General" description="Security and application-wide preferences." />
+      
+      <div className="rounded-lg border border-border bg-card p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-medium">Developer Mode</h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Enable verbose debug logging in the Rust backend terminal.
+            </p>
+          </div>
+          <Button variant={debugLogEnabled ? "default" : "secondary"} size="sm" onClick={toggleDebugLog}>
+            {debugLogEnabled ? "Logging Enabled" : "Logging Disabled"}
+          </Button>
+        </div>
+      </div>
       
       <div className="rounded-lg border border-border bg-card p-5">
         <div className="flex items-center justify-between">

@@ -84,7 +84,7 @@ pub fn init_db() -> Result<()> {
         [],
     )?;
 
-    println!("Database initialized at {:?}", db_path);
+    crate::debug_log!("Database initialized at {:?}", db_path);
 
     Ok(())
 }

@@ -1,3 +1,15 @@
+use std::sync::atomic::{AtomicBool, Ordering};
+pub static DEBUG_LOG: AtomicBool = AtomicBool::new(false);
+
+#[macro_export]
+macro_rules! debug_log {
+    ($($arg:tt)*) => {
+        if $crate::DEBUG_LOG.load(std::sync::atomic::Ordering::Relaxed) {
+            println!($($arg)*);
+        }
+    };
+}
+
 use futures_util::{SinkExt, StreamExt};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -57,6 +69,7 @@ async fn main() {
     let routes = ws_route.with(warp::cors().allow_any_origin());
 
     println!("Forge Backend listening on ws://0.0.0.0:3030/ws");
+    println!("Type 'cargo run --release' for smaller binaries.");
     warp::serve(routes).run(([0, 0, 0, 0], 3030)).await;
 }
 
@@ -82,7 +95,7 @@ async fn client_connected(ws: WebSocket, clients: Clients) {
         },
     );
 
-    println!("Client connected: {}", my_id);
+    crate::debug_log!("Client connected: {}", my_id);
 
     // Keep-alive ping interval
     tokio::task::spawn(async move {
@@ -109,7 +122,7 @@ async fn client_connected(ws: WebSocket, clients: Clients) {
         let msg = match result {
             Ok(msg) => msg,
             Err(e) => {
-                println!("WebSocket error: {}", e);
+                crate::debug_log!("WebSocket error: {}", e);
                 break;
             }
         };
@@ -147,7 +160,7 @@ async fn client_connected(ws: WebSocket, clients: Clients) {
 
     // Client disconnected
     clients.lock().await.remove(&my_id);
-    println!("Client disconnected: {}", my_id);
+    crate::debug_log!("Client disconnected: {}", my_id);
 }
 
 // Handles incoming WebSocket text messages as BackendRequests and returns BackendResponses
@@ -415,7 +428,7 @@ async fn handle_websocket_message(
             match ssh::connect_and_authenticate(&host, port, username, private_key_pem).await {
                 Ok(mut conn_handle) => match ssh::start_sftp_client(&mut conn_handle).await {
                     Ok(sftp_client) => {
-                        println!(
+                        crate::debug_log!(
                             "Successfully connected to SSH and initialized SFTP for {}",
                             host
                         );
@@ -1507,7 +1520,7 @@ async fn handle_websocket_message(
         messages::BackendRequest::StopAiGeneration { request_id } => {
             if let Some(tasks) = client_session.active_ai_tasks.lock().await.get(&request_id) {
                 tasks.cancel();
-                println!("Backend: Cancelled AI task {}", request_id);
+                crate::debug_log!("Backend: Cancelled AI task {}", request_id);
             }
             return Some(messages::BackendResponse::Error {
                 message: format!("AI generation stopped for task {}", request_id),
@@ -1766,7 +1779,7 @@ async fn handle_websocket_message(
             context,
             request_id,
         } => {
-            println!(
+            crate::debug_log!(
                 "Backend: Routing AI Chat Stream to Provider for prompt: {}",
                 prompt
             );
@@ -1797,6 +1810,14 @@ async fn handle_websocket_message(
                     tasks_clone.lock().await.remove(&rid);
                 }
             });
+            return None;
+        }
+        messages::BackendRequest::SetDebugLog { enabled } => {
+            crate::DEBUG_LOG.store(enabled, std::sync::atomic::Ordering::Relaxed);
+            crate::debug_log!(
+                "Backend debug logging is now {}",
+                if enabled { "enabled" } else { "disabled" }
+            );
             return None;
         }
     })

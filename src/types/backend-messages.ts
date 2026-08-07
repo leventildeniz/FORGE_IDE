@@ -52,6 +52,7 @@ export enum BackendRequestType {
   GitAddRemote = "GitAddRemote",
   GitRemoveRemote = "GitRemoveRemote",
   GitPull = "GitPull",
+  SetDebugLog = "SetDebugLog",
 }
 
 export type BackendRequest =
@@ -339,6 +340,10 @@ export type BackendRequest =
   | {
       type: BackendRequestType.GitPull;
       payload: { project_root: string; request_id?: string };
+    }
+  | {
+      type: BackendRequestType.SetDebugLog;
+      payload: { enabled: boolean; request_id?: string };
     };
 
 export enum BackendResponseType {

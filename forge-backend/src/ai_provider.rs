@@ -248,7 +248,7 @@ pub async fn handle_ai_chat_stream(
             ) {
                 if is_enabled {
                     let args: Vec<&str> = args_val.iter().filter_map(|v| v.as_str()).collect();
-                    println!(
+                    crate::debug_log!(
                         "Backend: Starting MCP Server: {} ({} {:?})",
                         name, command, args
                     );
@@ -278,14 +278,14 @@ pub async fn handle_ai_chat_stream(
                                                 ));
                                             }
                                         }
-                                        println!(
+                                        crate::debug_log!(
                                             "Backend: Successfully loaded MCP tools from '{}'",
                                             name
                                         );
                                     }
                                 }
                                 Err(e) => {
-                                    println!(
+                                    crate::debug_log!(
                                         "Backend: MCP '{}' tools/list waiting... (Error: {})",
                                         name, e
                                     );
@@ -297,14 +297,14 @@ pub async fn handle_ai_chat_stream(
                         if found_tools {
                             mcp_clients.insert(name.to_string(), client);
                         } else {
-                            println!(
+                            crate::debug_log!(
                                 "Backend: MCP Server '{}' started but failed to list tools after 20 seconds.",
                                 name
                             );
                             client.stop().await;
                         }
                     } else {
-                        println!("Backend: Failed to start MCP Server {}", name);
+                        crate::debug_log!("Backend: Failed to start MCP Server {}", name);
                     }
                 }
             }
@@ -419,13 +419,13 @@ MANDATORY WORKFLOW:
         }
     }
 
-    println!("\n📊 [CONTEXT BUDGET MANAGER] Allocating Tokens:");
-    println!("  -> Total Available Context: {}", context_window);
-    println!("  -> Output Reserve: {}", output_reserve);
-    println!("  -> Safety Margin: {}", safety_margin);
-    println!("  -> Budget for Allocation: {}", total_budget_for_alloc);
-    println!("  -> Codebase/File Budget: {} tokens", file_budget_tokens);
-    println!("  -> Knowledge Budget: {} tokens", knowledge_budget_tokens);
+    crate::debug_log!("\n📊 [CONTEXT BUDGET MANAGER] Allocating Tokens:");
+    crate::debug_log!("  -> Total Available Context: {}", context_window);
+    crate::debug_log!("  -> Output Reserve: {}", output_reserve);
+    crate::debug_log!("  -> Safety Margin: {}", safety_margin);
+    crate::debug_log!("  -> Budget for Allocation: {}", total_budget_for_alloc);
+    crate::debug_log!("  -> Codebase/File Budget: {} tokens", file_budget_tokens);
+    crate::debug_log!("  -> Knowledge Budget: {} tokens", knowledge_budget_tokens);
 
     // Send Telemetry Update to Frontend
     if let Ok(msg) = serde_json::to_string(&crate::messages::BackendResponse::TelemetryUpdate {
@@ -570,7 +570,7 @@ MANDATORY WORKFLOW:
                     let allowed_file_budget = file_budget_tokens.saturating_sub(header_tokens);
                     let char_limit = allowed_file_budget * 4;
                     let truncated_content = if content.len() > char_limit {
-                        println!(
+                        crate::debug_log!(
                             "  ✂️ [TRUNCATION ALERT] Active file '{}' is too large ({} chars). Truncating to {} chars to protect RAM!",
                             path,
                             content.len(),
@@ -581,7 +581,7 @@ MANDATORY WORKFLOW:
                             &content[..char_limit]
                         )
                     } else {
-                        println!(
+                        crate::debug_log!(
                             "  ✅ [BUDGET OK] Active file '{}' fits in context ({} chars).",
                             path,
                             content.len()
@@ -794,11 +794,11 @@ MANDATORY WORKFLOW:
             req_builder
         };
 
-        println!(
+        crate::debug_log!(
             "\n[DEBUG] === SENDING RAW HTTP REQUEST TO MODEL (Iteration {}) ===",
             iteration
         );
-        println!("Endpoint: {}", url);
+        crate::debug_log!("Endpoint: {}", url);
 
         match req_builder.send().await {
             Ok(res) => {
@@ -811,7 +811,7 @@ MANDATORY WORKFLOW:
 
                 while let Some(chunk_res) = stream.next().await {
                     if cancellation_token.is_cancelled() {
-                        println!(
+                        crate::debug_log!(
                             "Backend: AI stream cancelled for request {}",
                             request_id.as_deref().unwrap_or("unknown")
                         );

@@ -161,7 +161,7 @@ impl McpClient {
             req_str.push('\n');
 
             // Log the outgoing request for debugging
-            println!("MCP Client: Sending request -> {}", req_str.trim());
+            crate::debug_log!("MCP Client: Sending request -> {}", req_str.trim());
 
             stdin
                 .write_all(req_str.as_bytes())
@@ -183,7 +183,7 @@ impl McpClient {
                             let trimmed_line = line.trim();
                             // Log incoming lines for debugging
                             if trimmed_line.starts_with('{') {
-                                println!("MCP Client: Received -> {}", trimmed_line);
+                                crate::debug_log!("MCP Client: Received -> {}", trimmed_line);
                             }
 
                             // MCP Servers (especially npx) can be very chatty.

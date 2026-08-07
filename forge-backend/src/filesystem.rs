@@ -93,7 +93,7 @@ pub fn list_dir_contents<'a>(
             let metadata = match fs::metadata(&entry_path).await {
                 Ok(m) => m,
                 Err(e) => {
-                    println!(
+                    eprintln!(
                         "Backend Error: Cannot read metadata '{}': {} (Skipping)",
                         entry_path.to_string_lossy(),
                         e
@@ -122,7 +122,7 @@ pub fn list_dir_contents<'a>(
                 .await
                 {
                     Ok(children) => node.children = Some(children),
-                    Err(e) => println!(
+                    Err(e) => eprintln!(
                         "Backend Error: Subdirectory listing error '{}': {}",
                         node.path, e
                     ),

@@ -31,7 +31,6 @@ import { toast } from "sonner";
 
 const triggeredScrapes = new Set<string>();
 
-// Removed sampleTree, findFile, SAMPLE_PROJECT_NAME imports
 type UISlice = {
   isAppLocked: boolean;
   appPasswordHash: string | null;
@@ -314,7 +313,6 @@ const pendingPromises = new Map<
   { resolve: (value: any) => void; reject: (reason?: any) => void }
 >();
 
-// Removed initialMockFileTree and initialMockOpenFile
 // Buffer for throttling AI Stream updates to React UI
 let streamBuffer: Record<string, string> = {};
 let lastStreamUpdate = 0;
@@ -1776,7 +1774,8 @@ export const useIDEStore = create<IDEState>()(
         activeChatId: null,
         chatMode: "code",
         setChatMode: (mode) => set({ chatMode: mode }),
-        // Keep initial mock data for AI for now, integrate later
+        
+        // AI State
         messages: [],
         streaming: false,
         activeAiRequestId: null,
@@ -2206,7 +2205,7 @@ export const useIDEStore = create<IDEState>()(
           }),
         setActiveTerminal: (id) => set({ activeTerminalId: id }),
 
-        // Preview - Keep mock data for now
+        // Preview State
         previewUrl: "http://localhost:5173/",
         previewDevice: "desktop",
         previewRunning: true,
@@ -2271,7 +2270,7 @@ export const useIDEStore = create<IDEState>()(
             ],
           })),
 
-        // Environments - Keep mock data for now
+        // Environments
         environments: (() => {
           const isWindowAvailable = typeof window !== "undefined";
           const isWindows =
@@ -2458,7 +2457,6 @@ export const useIDEStore = create<IDEState>()(
             });
         },
 
-        // Models - Keep mock data for now
         updateSshEnvironmentDetails: (id: string, updatedEnv: Environment) => {
           set((s) => ({
             environments: s.environments.map((env) => (env.id === id ? updatedEnv : env)),
@@ -2480,7 +2478,7 @@ export const useIDEStore = create<IDEState>()(
           get().deleteEnvironment(id).catch(console.error);
         },
 
-        // Models - Keep mock data for now
+        // Models
         models: [
           {
             id: "m_gemini_3_1",
@@ -2613,7 +2611,6 @@ export const useIDEStore = create<IDEState>()(
           })),
 
         // GitHub Integration
-        // GitHub - Keep mock data for now
         githubConnected: false,
         githubUser: null,
         githubRepos: [],

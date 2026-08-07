@@ -252,6 +252,9 @@ pub enum BackendRequest {
         active_environment_details: Option<Environment>,
         request_id: Option<String>,
     },
+    SetDebugLog {
+        enabled: bool,
+    },
     ScrapeWeb {
         url: String,
         project_root: String,
