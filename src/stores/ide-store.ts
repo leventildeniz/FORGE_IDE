@@ -667,6 +667,9 @@ export const useIDEStore = create<IDEState>()(
 
                   // Basic Markdown Code Block parsing into ChangeSets
                   let parsedMessages = newMessages;
+                  let newChangeSets = { ...state.changeSets };
+                  let hasAnyChangesets = false;
+
                   if (isDone) {
                     parsedMessages = newMessages.map((m) => {
                       if (m.id === msgId) {
@@ -724,84 +727,77 @@ export const useIDEStore = create<IDEState>()(
                             csCount++;
                             const changeSetId = `cs_${msgId}_${csCount}`;
                             hasChanges = true;
+                            hasAnyChangesets = true;
 
-                            // Register changeset in the store
-                            set((state) => {
-                              let guessedPath = "";
+                            let guessedPath = "";
 
-                              if (pathCommentMatch) {
-                                guessedPath = pathCommentMatch[1];
+                            if (pathCommentMatch) {
+                              guessedPath = pathCommentMatch[1];
+                            }
+
+                            // Check text before code block
+                            if (!guessedPath) {
+                              const pathMatch = beforeText.match(/`([\w\-./]+\.\w+)`[^`]*$/);
+                              if (pathMatch) {
+                                guessedPath = pathMatch[1];
                               }
+                            }
 
-                              // Check text before code block
-                              if (!guessedPath) {
-                                const pathMatch = beforeText.match(/`([\w\-./]+\.\w+)`[^`]*$/);
-                                if (pathMatch) {
-                                  guessedPath = pathMatch[1];
-                                }
-                              }
+                            let targetPath = "";
+                            let targetName = "";
+                            let oldContent = "";
 
-                              let targetPath = "";
-                              let targetName = "";
-                              let oldContent = "";
-
-                              if (guessedPath) {
-                                targetName = guessedPath.split("/").pop() || guessedPath;
-                                if (state.projectRootPath) {
-                                  if (
-                                    guessedPath.startsWith("/") ||
-                                    /^[a-zA-Z]:\\/.test(guessedPath)
-                                  ) {
-                                    targetPath = guessedPath;
-                                  } else {
-                                    targetPath =
-                                      state.projectRootPath +
-                                      (state.projectRootPath.endsWith("/") ? "" : "/") +
-                                      guessedPath;
-                                  }
-                                } else {
+                            if (guessedPath) {
+                              targetName = guessedPath.split("/").pop() || guessedPath;
+                              if (state.projectRootPath) {
+                                if (
+                                  guessedPath.startsWith("/") ||
+                                  /^[a-zA-Z]:\\/.test(guessedPath)
+                                ) {
                                   targetPath = guessedPath;
-                                }
-                                const existingTab = state.tabs.find((t) => t.path === targetPath);
-                                if (existingTab) {
-                                  oldContent = existingTab.content;
+                                } else {
+                                  targetPath =
+                                    state.projectRootPath +
+                                    (state.projectRootPath.endsWith("/") ? "" : "/") +
+                                    guessedPath;
                                 }
                               } else {
-                                const activeTab = state.tabs.find(
-                                  (t) => t.path === state.activePath,
-                                );
-                                // Default to a snippet path to ensure it passes 'untitled' checks and can be saved safely.
-                                const ext = lang || "txt";
-                                targetPath =
-                                  activeTab?.path ||
-                                  `snippet_${Math.random().toString(36).slice(2, 8)}.${ext}`;
-                                targetName = activeTab?.name || `snippet.${ext}`;
-                                oldContent = activeTab?.content || "";
+                                targetPath = guessedPath;
                               }
+                              const existingTab = state.tabs.find((t) => t.path === targetPath);
+                              if (existingTab) {
+                                oldContent = existingTab.content;
+                              }
+                            } else {
+                              const activeTab = state.tabs.find(
+                                (t) => t.path === state.activePath,
+                              );
+                              // Default to a snippet path to ensure it passes 'untitled' checks and can be saved safely.
+                              const ext = lang || "txt";
+                              targetPath =
+                                activeTab?.path ||
+                                `snippet_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+                              targetName = activeTab?.name || `snippet.${ext}`;
+                              oldContent = activeTab?.content || "";
+                            }
 
-                              const newFiles = [
-                                {
-                                  path: targetPath,
-                                  name: targetName,
-                                  added: code.split("\n").length,
-                                  removed: oldContent.split("\n").length,
-                                  before: oldContent,
-                                  after: code,
-                                },
-                              ];
+                            const newFiles = [
+                              {
+                                path: targetPath,
+                                name: targetName,
+                                added: code.split("\n").length,
+                                removed: oldContent.split("\n").length,
+                                before: oldContent,
+                                after: code,
+                              },
+                            ];
 
-                              return {
-                                changeSets: {
-                                  ...state.changeSets,
-                                  [changeSetId]: {
-                                    id: changeSetId,
-                                    title: `Update ${targetName}`,
-                                    files: newFiles,
-                                    status: "pending",
-                                  },
-                                },
-                              };
-                            });
+                            newChangeSets[changeSetId] = {
+                              id: changeSetId,
+                              title: `Update ${targetName}`,
+                              files: newFiles,
+                              status: "pending",
+                            };
 
                             newParts.push({ type: "change", changeSetId });
                           }
@@ -852,6 +848,7 @@ export const useIDEStore = create<IDEState>()(
                   }
 
                   return {
+                    ...(hasAnyChangesets ? { changeSets: newChangeSets } : {}),
                     messages: parsedMessages,
                     streaming: !isDone,
                     isCompacting: isDone ? false : state.isCompacting,
