@@ -1,0 +1,108 @@
+Client connected: 1231474066631295671
+Backend: Routing AI Chat Stream to Provider for prompt: Selam
+
+[DEBUG] === SENDING RAW HTTP REQUEST TO MODEL ===
+Endpoint: http://192.168.0.18:8001/v1/chat/completions
+Payload:
+{
+  "model": "/Users/levent/models/Gemma4-31b-it-6bit",
+  "messages": [
+    {
+      "content": "You are an expert AI programming assistant.",
+      "role": "system"
+    },
+    {
+      "content": "Selam",
+      "role": "user"
+    }
+  ],
+  "temperature": 1.0,
+  "max_tokens": 8192,
+  "stop": [
+    "<end_of_turn>",
+    "<eos>"
+  ],
+  "reasoning_effort": "medium",
+  "stream": true
+}
+==========================================
+
+Backend: Routing AI Chat Stream to Provider for prompt: naber?nasılsın?
+
+[DEBUG] === SENDING RAW HTTP REQUEST TO MODEL ===
+Endpoint: http://192.168.0.18:8001/v1/chat/completions
+Payload:
+{
+  "model": "/Users/levent/models/Gemma4-31b-it-6bit",
+  "messages": [
+    {
+      "content": "You are an expert AI programming assistant.",
+      "role": "system"
+    },
+    {
+      "content": "Selam",
+      "role": "user"
+    },
+    {
+      "content": "Selam! Size nasıl yardımcı olabilirim? \n\nProgramlama, yazılım geliştirme, hata ayıklama (debugging) veya herhangi bir teknik konuyla ilgili sorunuz varsa sormaktan çekinmeyin. Hangi dil veya teknoloji üzerinde çalışıyorsunuz?",
+      "role": "assistant"
+    },
+    {
+      "content": "naber?nasılsın?",
+      "role": "user"
+    }
+  ],
+  "temperature": 1.0,
+  "max_tokens": 8192,
+  "stop": [
+    "<end_of_turn>",
+    "<eos>"
+  ],
+  "reasoning_effort": "medium",
+  "stream": true
+}
+==========================================
+
+Backend: Routing AI Chat Stream to Provider for prompt: bir ide var onun testini yapıyorum seninle aslında suan.Chat ekranının testini
+
+[DEBUG] === SENDING RAW HTTP REQUEST TO MODEL ===
+Endpoint: http://192.168.0.18:8001/v1/chat/completions
+Payload:
+{
+  "model": "/Users/levent/models/Gemma4-31b-it-6bit",
+  "messages": [
+    {
+      "content": "You are an expert AI programming assistant.",
+      "role": "system"
+    },
+    {
+      "content": "Selam",
+      "role": "user"
+    },
+    {
+      "content": "Selam! Size nasıl yardımcı olabilirim? \n\nProgramlama, yazılım geliştirme, hata ayıklama (debugging) veya herhangi bir teknik konuyla ilgili sorunuz varsa sormaktan çekinmeyin. Hangi dil veya teknoloji üzerinde çalışıyorsunuz?",
+      "role": "assistant"
+    },
+    {
+      "content": "naber?nasılsın?",
+      "role": "user"
+    },
+    {
+      "content": "İyiyim, teşekkür ederim! Her şey yolunda, sistemlerim tıkır tıkır çalışıyor. 😊 Sen nasılsın, nasıl gidiyor?\n\nBugün üzerinde çalıştığın bir proje, çözemediğin bir hata veya merak ettiğin bir teknoloji var mı? Sana yardımcı olabileceğim bir konu varsa buradayım!",
+      "role": "assistant"
+    },
+    {
+      "content": "bir ide var onun testini yapıyorum seninle aslında suan.Chat ekranının testini",
+      "role": "user"
+    }
+  ],
+  "temperature": 1.0,
+  "max_tokens": 8192,
+  "stop": [
+    "<end_of_turn>",
+    "<eos>"
+  ],
+  "reasoning_effort": "medium",
+  "stream": true
+}
+==========================================

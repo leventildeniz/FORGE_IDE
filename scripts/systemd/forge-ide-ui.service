@@ -1,0 +1,14 @@
+[Unit]
+Description=Forge IDE UI
+After=network.target
+
+[Service]
+ExecStart=/bin/bash -c "/usr/local/bin/bun run dev"
+WorkingDirectory=/home/levent/FORGE_IDE
+Restart=always
+User=levent
+
+[Install]
+WantedBy=multi-user.target
+
+

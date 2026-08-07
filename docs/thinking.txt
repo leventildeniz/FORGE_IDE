@@ -1,0 +1,198 @@
+Aynen abi. Forge için Ollama/vLLM → Rust → Next.js tarafında benim önerdiğim yapı şu:
+
+Gemma 4
+   ↓
+Ollama / vLLM
+   ↓
+OpenAI-compatible streaming
+   ↓
+Rust Core
+   ↓
+WebSocket
+   ↓
+Next.js Chat
+1. Provider'dan Rust'a
+
+Rust tarafında Gemma'ya özel parser yazmayın. Provider'dan gelen reasoning/thinking ve normal content'i normalize edin.
+
+İç modeliniz:
+
+enum ChatEvent {
+    ThinkingDelta(String),
+    ContentDelta(String),
+
+    ToolCall {
+        id: String,
+        name: String,
+        arguments: String,
+    },
+
+    ToolResult {
+        id: String,
+        content: String,
+    },
+
+    Done,
+    Error(String),
+}
+
+Böylece Ollama da vLLM de Forge'un içinde aynı arayüze dönüşür.
+
+2. vLLM
+
+vLLM Gemma 4 reasoning'i parse edebiliyorsa:
+
+provider
+   ├── reasoning → ThinkingDelta
+   └── content   → ContentDelta
+
+Gemma'nın özel <|channel>thought formatını Rust'ta tekrar parse etmeyin.
+
+3. Ollama
+
+Ollama tarafında da thinking ayrı şekilde alınabiliyorsa aynı mapping:
+
+thinking → ThinkingDelta
+answer   → ContentDelta
+
+Eğer kullandığınız Ollama endpoint'i bunu tek string/tag stream olarak döndürüyorsa, sadece Ollama adapter'ının içinde parser koyarsınız.
+
+Yani:
+
+OllamaAdapter
+   ↓
+ChatEvent
+
+VllmAdapter
+   ↓
+ChatEvent
+
+Ana agent bunun Ollama mı vLLM mi olduğunu bilmez bile.
+
+4. WebSocket
+
+Rust → Next.js'e de provider'ın ham JSON'unu göndermeyin.
+
+Örneğin:
+
+{
+  "type": "thinking_delta",
+  "delta": "Önce auth middleware..."
+}
+
+sonra:
+
+{
+  "type": "content_delta",
+  "delta": "Bu problemi..."
+}
+
+Tool:
+
+{
+  "type": "tool_call",
+  "id": "42",
+  "name": "read_file",
+  "arguments": {
+    "path": "src/auth.rs"
+  }
+}
+
+Böylece frontend provider'dan tamamen bağımsız.
+
+5. Next.js
+
+Chat state:
+
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+  thinking?: string;
+  toolCalls?: ToolCall[];
+};
+
+UI:
+
+┌───────────────────────────────┐
+│ 🧠 Thinking              ▾   │
+│                               │
+│ Auth middleware'ı inceliyor...│
+└───────────────────────────────┘
+
+Buradaki Rust lifetime problemini
+middleware tarafında düzeltiyorum.
+
+Thinking'i collapsible yapardım. Streaming sırasında açılır, tamamlanınca kapatılabilir.
+
+6. EN ÖNEMLİ KISIM: Context Manager
+
+Thinking'i kullanıcıya göstermek başka, modele tekrar göndermek başka.
+
+SQLite'a chat kaydında isterseniz thinking'i metadata olarak saklayabilirsiniz ama sonraki context'e:
+
+❌ previous thinking
+
+göndermeyin.
+
+Normalde:
+
+User
+   ↓
+Assistant final answer
+   ↓
+next context
+
+Tool-call senaryolarında ise gerekli tool interaction'ı koruyun.
+
+Böylece:
+
+Gemma
+ ├── Thinking ──→ UI
+ │                 │
+ │                 └→ optional SQLite
+ │
+ └── Final ──────→ SQLite
+                    │
+                    ↓
+              Context Manager
+                    │
+                    ↓
+                  Gemma
+Forge için nihai mimari
+                  ┌─────────────┐
+                  │   Ollama    │
+                  └──────┬──────┘
+                         │
+                  ┌──────▼──────┐
+                  │ Provider    │
+                  │ Adapter     │
+                  └──────┬──────┘
+                         │
+                  ┌──────▼──────┐
+                  │    vLLM     │
+                  └──────┬──────┘
+                         │
+                         ▼
+                ┌─────────────────┐
+                │    Rust Core     │
+                │                  │
+                │ ChatEvent        │
+                │ Context Manager  │
+                │ Agent            │
+                │ Tools            │
+                └────────┬─────────┘
+                         │ WebSocket
+                         ▼
+                ┌─────────────────┐
+                │    Next.js      │
+                │                 │
+                │ 🧠 Thinking     │
+                │ 💬 Answer       │
+                │ 🔧 Tools        │
+                └─────────────────┘
+
+Kritik prensip: OllamaAdapter ve VllmAdapter farklı olabilir ama Rust Core'un geri kalanının ikisini de aynı ChatEvent olarak görmesi lazım.
+
+Böyle yaparsanız yarın Gemma yerine başka model/provider taktığınızda Rust agent'ı ve Next.js chat'i yeniden yazmazsınız.
+
+Ve bence Forge için en doğru yaklaşım bu.

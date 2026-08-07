@@ -1,0 +1,120 @@
+VITE v8.1.5  ready in 2930 ms
+
+  ?  Local:   http://localhost:6060/
+  ?  Network: http://10.255.255.254:6060/
+  ?  Network: http://10.112.161.247:6060/
+  ?  Network: http://192.168.0.10:6060/
+  ?  press h + enter to show help
+1:24:31 PM [vite] (ssr) connected.
+Error: Transform failed with 1 error:
+
+[PARSE_ERROR] Unexpected token
+     ?-[ src/stores/ide-store.ts:220:21 ]
+     ¦
+ 220 ¦   type PublishSlice = {
+     ¦                     -
+     ¦                     ?--
+-----?
+
+    at transformWithOxc (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:4033:19)
+    at TransformPluginContext.transform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:4104:26)
+    at EnvironmentPluginContainer.transform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:30201:51)
+    at async loadAndTransform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:20124:26) (status 500)
+caused by: Error: Transform failed with 1 error:
+
+[PARSE_ERROR] Unexpected token
+     ?-[ src/stores/ide-store.ts:220:21 ]
+     ¦
+ 220 ¦   type PublishSlice = {
+     ¦                     -
+     ¦                     ?--
+-----?
+
+    at transformWithOxc (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:4033:19)
+    at TransformPluginContext.transform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:4104:26)
+    at EnvironmentPluginContainer.transform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:30201:51)
+    at async loadAndTransform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:20124:26)
+Error: Transform failed with 1 error:
+
+[PARSE_ERROR] Unexpected token
+     ?-[ src/stores/ide-store.ts:220:21 ]
+     ¦
+ 220 ¦   type PublishSlice = {
+     ¦                     -
+     ¦                     ?--
+-----?
+
+    at transformWithOxc (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:4033:19)
+    at TransformPluginContext.transform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:4104:26)
+    at EnvironmentPluginContainer.transform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:30201:51)
+    at async loadAndTransform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:20124:26) (status 500)
+caused by: Error: Transform failed with 1 error:
+
+[PARSE_ERROR] Unexpected token
+     ?-[ src/stores/ide-store.ts:220:21 ]
+     ¦
+ 220 ¦   type PublishSlice = {
+     ¦                     -
+     ¦                     ?--
+-----?
+
+    at transformWithOxc (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:4033:19)
+    at TransformPluginContext.transform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:4104:26)
+    at EnvironmentPluginContainer.transform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:30201:51)
+    at async loadAndTransform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:20124:26)
+Error: Transform failed with 1 error:
+
+[PARSE_ERROR] Unexpected token
+     ?-[ src/stores/ide-store.ts:220:21 ]
+     ¦
+ 220 ¦   type PublishSlice = {
+     ¦                     -
+     ¦                     ?--
+-----?
+
+    at transformWithOxc (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:4033:19)
+    at TransformPluginContext.transform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:4104:26)
+    at EnvironmentPluginContainer.transform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:30201:51)
+    at async loadAndTransform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:20124:26) (status 500)
+caused by: Error: Transform failed with 1 error:
+
+[PARSE_ERROR] Unexpected token
+     ?-[ src/stores/ide-store.ts:220:21 ]
+     ¦
+ 220 ¦   type PublishSlice = {
+     ¦                     -
+     ¦                     ?--
+-----?
+
+    at transformWithOxc (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:4033:19)
+    at TransformPluginContext.transform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:4104:26)
+    at EnvironmentPluginContainer.transform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:30201:51)
+    at async loadAndTransform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:20124:26)
+Error: Transform failed with 1 error:
+
+[PARSE_ERROR] Unexpected token
+     ?-[ src/stores/ide-store.ts:220:21 ]
+     ¦
+ 220 ¦   type PublishSlice = {
+     ¦                     -
+     ¦                     ?--
+-----?
+
+    at transformWithOxc (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:4033:19)
+    at TransformPluginContext.transform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:4104:26)
+    at EnvironmentPluginContainer.transform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:30201:51)
+    at async loadAndTransform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:20124:26) (status 500)
+caused by: Error: Transform failed with 1 error:
+
+[PARSE_ERROR] Unexpected token
+     ?-[ src/stores/ide-store.ts:220:21 ]
+     ¦
+ 220 ¦   type PublishSlice = {
+     ¦                     -
+     ¦                     ?--
+-----?
+
+    at transformWithOxc (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:4033:19)
+    at TransformPluginContext.transform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:4104:26)
+    at EnvironmentPluginContainer.transform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:30201:51)
+    at async loadAndTransform (file:///home/levent/FORGE_IDE/node_modules/vite/dist/node/chunks/node.js:20124:26)

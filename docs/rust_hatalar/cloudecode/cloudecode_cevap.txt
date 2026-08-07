@@ -1,0 +1,46 @@
+İşte can alıcı nokta: Hâlâ iki farklı keys kaynağını karıştırıyorsunuz. russh-0.50.4, kendi keys modülünü paket içine gömüyor (russh::keys::*), ama sizin Cargo.toml'unuzda muhtemelen ayrıca eski/bağımsız bir russh-keys crate'i de var ve import'lar oraya gidiyor. O bağımsız crate'te PrivateKeyWithHashAlg ve HashAlg ya yok ya da farklı bir yerde — E0432/E0433 bundan kaynaklanıyor.
+
+docs.rs/russh/latest üzerindeki resmi öğe listesine göre doğru yollar şöyle:
+
+rust
+use russh::keys::key::{KeyPair, PrivateKeyWithHashAlg};
+use russh::keys::{HashAlg, PublicKey};
+
+yani russh_keys:: değil, russh::keys:: olacak. Düzeltelim:
+
+Çözüm için kod uyarısını gidermeyi düşündü
+Çözüm için kod uyarısını gidermeyi düşündü
+
+futures::StreamExt artık gerekli değil (çünkü read_dir stream değil, doğrudan iterate ediliyor) — kaldırıyorum, uyarıyı da temizlemiş oluyoruz:
+
+Remove now-unused futures::StreamExt import
+Remove now-unused futures::StreamExt import
+
+Şimdi filesystem.rs'teki gereksiz import'u da temizleyelim (FileAttributes kullanılmıyor, sadece FileType gerekli):
+
+Ran 2 commands, edited a file, read a file
+Ran 2 commands, edited a file, read a file
+
+Evet, gerçekten inatçı bir kütüphane geçişi 😄 Bu son iki hatanın nedeni: russh 0.50.4 kendi keys desteğini içine gömdü ve russh_keys:: (bağımsız crate) ile russh::keys:: (gömülü modül) artık aynı şey değil. Sizin Cargo.toml'unuzda muhtemelen hâlâ ayrı bir russh-keys bağımlılığı var ve use satırları oraya gidiyordu — o crate'te PrivateKeyWithHashAlg (E0432) ve HashAlg (E0433) ya yok ya da farklı konumda.
+
+Doğru yol (docs.rs/russh'un resmi öğe listesinden doğrulandı):
+
+rust
+use russh::keys::key::{KeyPair, PrivateKeyWithHashAlg};
+use russh::keys::{HashAlg, PublicKey};
+
+Yani russh_keys::key::... değil, russh::keys::key::.... PrivateKeyWithHashAlg bile kendi başına russh::keys altında değil, keys::key alt modülünde duruyor — bu incelik tam da E0432'nin sebebiydi.
+
+Yaptığım diğer küçük düzeltmeler:
+
+HashAlg::Sha256 yerine ed25519 anahtarınız için None::<HashAlg> kullandım (RSA olmayan anahtarlarda hash_alg zaten yok sayılıyor; RSA kullanırsanız session.best_supported_rsa_hash().await?.flatten() ile otomatik seçtirebilirsiniz).
+Artık gerekmeyen futures::StreamExt (ssh.rs) ve FileAttributes / crate::ssh::SshError (filesystem.rs) import'larını temizledim.
+
+is_project_root (satır 269) ve active_environment_details (satır 357) uyarıları zararsız: ikincisi zaten #[cfg(target_os = "windows")] bloğu içinde kullanılıyor, Linux derlemesinde doğal olarak "kullanılmamış" görünüyor — derlemeyi engellemiyor, isterseniz _ öneki ekleyip susturabilirsiniz.
+
+Güncellenmiş dosyaları yukarı koydum — bu sefer cargo build temiz geçmeli.
+
+Ssh
+RS 
+Filesystem
+RS 

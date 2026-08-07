@@ -1,0 +1,12 @@
+[Unit]
+Description=Forge IDE Backend
+After=network.target
+
+[Service]
+ExecStart=/bin/bash -c "cd /home/levent/FORGE_IDE/forge-backend && cargo run"
+WorkingDirectory=/home/levent/FORGE_IDE/forge-backend
+Restart=always
+User=levent
+
+[Install]
+WantedBy=multi-user.target

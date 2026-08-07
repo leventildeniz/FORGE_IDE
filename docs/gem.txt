@@ -1,0 +1,27 @@
+Kök Neden Analizi: Neden Boşta Kalıyoruz?
+Eksik Tetikleyici (Missing Action on Response): Backend CreateDir isteğini alıp klasörü diskte yaratıyor, tarayıcıya CreateDirResponse basıyor. Frontend'in WebSocket dinleyicisi (ide-store.ts) bu cevabı yakalıyor, konsola “CreateDirResponse received. No automatic project load…” yazıp duruyor. Yani motor gelen pası görüyor ama kaleye şut çekmiyor! projectRootPath state'i güncellenmediği ve fetchFileTree tetiklenmediği için Explorer anında ekrana bozuk/boş dizi ([]) basıyor.
+
+Zustand Rehydration veya Görünmez useEffect Tuzakları:
+Analizde belirttiğin gibi, suggestedProjectRootsResponse geldiğinde sayfanın bir köşesinde (muhtemelen index.tsx veya kök bileşende) gizli bir useEffect kol geziyor olabilir. Listeden ilk değeri kapıp projectRootPath'e yapıştırıyor ya da localStorage'daki eski bir kalıntı state'i zehirliyor.
+
+🛠️ Çözüm Mührü (Koda Neşter Vurma Vakti)
+Bu düğümü çözmek için ide-store.ts içindeki WebSocket mesaj yönlendiricisine (onMessage) ve state akışına şu net müdahaleyi yapmamız şart:
+
+1. CreateDirResponse Yakalandığı Anda Projeyi Mühürlemek
+ide-store.ts içerisindeki mesaj işleyicisine (WebSocket handler) gidip CreateDirResponse geldiği anı şu şekilde güçlendirmeliyiz:
+
+TypeScript
+// ide-store.ts içindeki mesaj yönlendirici (onMessage) katmanı
+case 'CreateDirResponse':
+    if (payload.success && payload.path) {
+        console.log(">>> [MÜHÜR] Klasör başarıyla açıldı, rota atanıyor:", payload.path);
+        
+        // 1. Project Root Path'i taze path ile güncelle
+        get().setProjectRoot(payload.path);
+        
+        // 2. Dosya ağacını (File Tree) hemen tetikle ki Explorer anında dolusun!
+        get().fetchFileTree(payload.path);
+    }
+    break;
+2. LocalStorage Temizliği ve State Disiplini
+Eğer Zustand persist middleware kullanıyorsa ve eski yolları hafızada tutuyorsa, uygulamayı başlatırken tarayıcı konsolundan geçici olarak bir kez localStorage.clear() çekmek veya persist konfigürasyonuna version/migrate kontrolü koymak o "hayalet path" sorununu tamamen ortadan kaldıracaktır.

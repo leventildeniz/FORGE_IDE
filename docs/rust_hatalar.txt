@@ -1,0 +1,160 @@
+Selam! Bu hataların hepsinin temelinde CRATE VERSIYON UYUMSUZLUĞU yatıyor. Özellikle russh ve russh-sftp crate'lerinin API'ları son versiyonlarda (özellikle russh 0.50+ ve russh-sftp 2.x) ciddi şekilde değişmiş. İşte hataların tek tek sebepleri ve çözümleri:
+
+================================================================================
+1. SftpError Bulunamıyor (E0432)
+================================================================================
+
+HATA:
+    error[E0432]: unresolved import `russh_sftp::SftpError`
+
+SEBEP:
+    russh-sftp 2.x'te SftpError artık kök modülde değil, 
+    russh_sftp::client::error::Error veya benzeri bir yerde. 
+    Ayrıca kendi SshError enum'unda zaten SftpError varyantı varmış.
+
+ÇÖZÜM:
+    // ESKİ (ssh.rs)
+    use russh_sftp::SftpError;
+
+    // YENİ - Kendi SshError'ını kullan veya russh_sftp::client::error::Error
+    use crate::ssh::SshError; // zaten tanımlı
+
+================================================================================
+2. Name::from_static Yok (E0599)
+================================================================================
+
+HATA:
+    error[E0599]: no associated function `from_static` found for `russh::kex::Name`
+
+SEBEP:
+    russh 0.50+'da kex::Name::from_static kaldırılmış. 
+    Artık Name struct'ı farklı şekilde oluşturuluyor.
+
+ÇÖZÜM:
+    // ESKİ
+    Name::from_static("curve25519-sha256@libssh.org"),
+
+    // YENİ (russh 0.50+)
+    russh::kex::CURVE25519_SHA256  // sabit
+    // veya
+    "curve25519-sha256@libssh.org".parse().unwrap()
+
+================================================================================
+3. russh::Error::Disconnect Fonksiyon Değil (E0618)
+================================================================================
+
+HATA:
+    error[E0618]: expected function, found `russh::Error`
+
+SEBEP:
+    russh::Error::Disconnect bir ENUM VARYANTI, fonksiyon değil. 
+    Ama siz parantezle çağırmaya çalışmışsınız.
+
+ÇÖZÜM:
+    // ESKİ (YANLIŞ)
+    return Err(SshError::AuthError(russh::Error::Disconnect(
+        russh::Disconnect::ByApplication,
+    )));
+
+    // YENİ (DOĞRU)
+    return Err(SshError::AuthError(russh::Error::Disconnect));
+    // veya
+    return Err(SshError::AuthError(russh::Error::IO(
+        std::io::Error::new(std::io::ErrorKind::Other, "Disconnected")
+    )));
+
+================================================================================
+4. Channel → AsyncRead/AsyncWrite Uyumsuzluğu (E0277) [EN KRITIK HATA]
+================================================================================
+
+HATA:
+    error[E0277]: the trait bound `russh::Channel<russh::client::Msg>: tokio::io::AsyncRead` is not satisfied
+
+SEBEP:
+    russh 0.50+'da Channel<Msg> artık doğrudan AsyncRead/AsyncWrite implement etmiyor. 
+    Bunun yerine russh::ChannelStream wrapper'ı kullanılıyor. 
+    russh-sftp 2.3.0 SftpSession::new() AsyncRead + AsyncWrite bekliyor 
+    ama Channel artık bunu sağlamıyor.
+
+ÇÖZÜM:
+    // ESKİ
+    let sftp_session = SftpSession::new(channel).await?;
+
+    // YENİ (russh 0.50+)
+    use russh::ChannelStream;
+    let stream = ChannelStream::new(channel);
+    let sftp_session = SftpSession::new(stream).await?;
+
+================================================================================
+5. DirEntry Tipi Değişmiş (E0308)
+================================================================================
+
+HATA:
+    error[E0308]: mismatched types
+    while let Some(Ok(entry)) = read_dir_entries.next()
+
+SEBEP:
+    russh-sftp 2.x'te read_dir().next() artık Option<Result<DirEntry, Error>> değil, 
+    doğrudan Option<DirEntry> döndürüyor.
+
+ÇÖZÜM:
+    // ESKİ
+    while let Some(Ok(entry)) = read_dir_entries.next() {
+
+    // YENİ
+    while let Some(entry) = read_dir_entries.next() {
+
+================================================================================
+6. FileType Option Karşılaştırması (E0308)
+================================================================================
+
+HATA:
+    error[E0308]: expected `FileType`, found `Option<FileType>`
+
+SEBEP:
+    file_type() Option<FileType> döndürüyor.
+
+ÇÖZÜM:
+    // ESKİ
+    is_dir: attrs.file_type() == Some(FileType::Dir),
+
+    // YENİ
+    is_dir: attrs.file_type() == Some(russh_sftp::protocol::FileType::Dir),
+    // veya daha güvenli:
+    is_dir: matches!(attrs.file_type(), Some(russh_sftp::protocol::FileType::Dir)),
+
+================================================================================
+ÖZET: NE YAPMALISIN?
+================================================================================
+
+SORUN                                    | ÇÖZÜM
+-----------------------------------------|-----------------------------------------
+russh / russh-sftp API uyumsuzluğu       | Cargo.toml'da versiyonları kontrol et.
+                                         | russh = "0.50" ve russh-sftp = "2.3"
+                                         | kullanıyorsan API değişikliklerine
+                                         | uyum sağla
+Channel stream değil                     | ChannelStream::new(channel) kullan
+from_static yok                          | russh::kex sabitlerini veya parse() kullan
+SftpError import hatası                  | russh_sftp::client::error::Error veya
+                                         | kendi hata tipini kullan
+read_dir iterator tipi                   | Some(Ok(entry)) yerine Some(entry) kullan
+
+================================================================================
+ÖNERİ
+================================================================================
+
+Eğer bu kodu başkasından aldıysan (örneğin eski bir örnek/ChatGPT çıktısı), 
+muhtemelen russh 0.40 veya daha eski versiyona yazılmıştır. Ya:
+
+1. KODU YENI API'YA UYARLA (yukarıdaki düzeltmeleri yap)
+
+   VEYA
+
+2. Cargo.toml'DA ESKI VERSIYONLARI SABITLE:
+
+   [dependencies]
+   russh = "0.43"        # veya kodun yazıldığı versiyon
+   russh-sftp = "1.0"    # eski versiyon
+
+Hangi yolu tercih edersen, Cargo.toml'daki russh ve russh-sftp 
+versiyonlarını paylaşırsan daha spesifik yardım edebilirim.

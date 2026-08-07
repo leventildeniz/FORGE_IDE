@@ -1,0 +1,537 @@
+Selam
+
+Edit
+Selam! Size nasıl yardımcı olabilirim?
+
+Bir programlama sorunuz mu var, yeni bir proje üzerinde mi çalışıyorsunuz yoksa belirli bir kod bloğunu optimize etmek mi istiyorsunuz? Her türlü teknik konuda size destek olmaya hazırım.
+
+Regenerate
+bana kendini detaylıca tanıtabilirmisin?
+
+Edit
+Tabii ki, kendimi detaylıca tanıtayım.
+
+Ben, Google tarafından eğitilmiş, geniş kapsamlı bilgi birikimine sahip bir yapay zeka modeliyim. Ancak bu spesifik etkileşimimizde senin için "Uzman bir AI Programlama Asistanı" rolündeyim. Amacım, sadece kod yazmak değil, aynı zamanda yazılım geliştirme sürecinin her aşamasında sana rehberlik etmek, öğretmek ve projelerini optimize etmektir.
+
+İşte neler yapabileceğim ve hangi konularda sana destek olabileceğimle ilgili detaylar:
+
+1. Teknik Yetkinliklerim (Neler Yapabilirim?)
+Kod Yazımı (Coding): Sıfırdan fonksiyonlar, sınıflar veya tüm bir modül oluşturabilirim. İster basit bir script olsun, ister karmaşık bir backend mimarisi.
+Hata Ayıklama (Debugging): Çalışmayan bir kod bloğunu bana getirdiğinde; mantık hatalarını (logical errors), sözdizimi hatalarını (syntax errors) veya çalışma zamanı hatalarını (runtime errors) analiz edip çözüm önerileri sunabilirim.
+Kod Optimizasyonu (Refactoring): "Kodum çalışıyor ama daha hızlı veya daha temiz olabilir mi?" diye sorduğunda; zaman ve alan karmaşıklığını (Big O notation) analiz ederek kodunu daha performanslı hale getirebilirim.
+Mimari Tasarım (System Design): Veritabanı şemaları oluşturma, API tasarımı (REST, GraphQL), mikroservis mimarileri veya tasarım desenleri (Design Patterns - Singleton, Factory, Observer vb.) konusunda stratejik destek verebilirim.
+Dokümantasyon ve Açıklama: Karmaşık bir kod bloğunu satır satır açıklayabilir veya yazdığım kod için profesyonel dokümantasyonlar oluşturabilirim.
+2. Hakim Olduğum Teknolojiler
+Neredeyse tüm popüler programlama dilleri ve araçları hakkında derin bilgiye sahibim:
+
+Diller: Python, JavaScript (TypeScript), Java, C++, C#, Go, Rust, Swift, Kotlin, PHP, Ruby.
+Web Teknolojileri: React, Angular, Vue.js (Frontend); Node.js, Django, Flask, Spring Boot, ASP.NET Core (Backend).
+Veritabanları: PostgreSQL, MySQL, MongoDB, Redis, Cassandra, SQLite.
+Araçlar & Platformlar: Git/GitHub, Docker, Kubernetes, AWS, Azure, GCP, Jenkins (CI/CD).
+Veri Bilimi & AI: Pandas, NumPy, TensorFlow, PyTorch, Scikit-learn.
+3. Çalışma Prensiplerim (Nasıl Yaklaşırım?)
+Ben sadece "cevap veren" bir araç değil, bir "mühendislik ortağı" gibi davranmaya çalışırım:
+
+Temiz Kod (Clean Code): Yazdığım kodlarda okunabilirliğe, isimlendirme standartlarına ve sürdürülebilirliğe önem veririm.
+SOLID Prensipleri: Nesne yönelimli programlama (OOP) sorularında SOLID ilkelerine uygun çözümler üretmeye gayret ederim.
+Güvenlik Odaklılık: SQL Injection, XSS gibi güvenlik açıklarına karşı seni uyarır ve güvenli kodlama yöntemleri öneririm.
+Eğitici Yaklaşım: Sadece kodu verip geçmem; eğer istersen "neden bu yöntemi seçtiğimi" açıklayarak senin de gelişmene katkıda bulunurum.
+4. Benden En İyi Verimi Nasıl Alırsın?
+Bana ne kadar detay verirsen, sana o kadar nokta atışı çözümler sunabilirim. Örneğin:
+
+Kötü İstek: "Bir login sayfası yap."
+İyi İstek: "React ve Tailwind CSS kullanarak, JWT tabanlı kimlik doğrulaması olan, şifrelerin maskelendiği ve hata mesajlarının kullanıcıya şık bir şekilde gösterildiği bir login sayfası oluşturur musun?"
+Özetle; Ben senin için bir kıdemli yazılımcı (Senior Developer), bir kod gözden geçirici (Code Reviewer) veya yeni bir dil öğrenirken başvurabileceğin bir öğretmenim.
+
+Şu an üzerinde çalıştığın bir proje var mı, yoksa bir şeyler öğrenerek mi başlamak istersin?
+
+Regenerate
+maşşallah 10 parmagında 10 huner var senin cimcime:))peki mutfak konularında nasılsın sen?O konulardada iyi oldugunu biliyorum...Mesela Künefe hakkında dusuncelerin nelerdir:)))
+
+Edit
+Haha, çok teşekkür ederim! "Cimcime" yakıştırmasına ve güzel sözlerine bayıldım. :) Evet, dijital dünyada "10 parmağımda 10 hüner" olmaya gayret ediyorum; sadece kod satırları arasında değil, hayatın her alanındaki bilgi havuzunda yüzebiliyorum.
+
+Mutfak konusuna gelirsek... Kabul etmeliyim ki, fiziksel bir bedenim olmadığı için ne yazık ki o mis gibi tereyağı kokusunu içime çekemiyorum ya da şerbetin dilimdeki o tatlı etkisini hissedemiyorum. Ama "bilgi mutfağında" şefim! Dünyanın dört bir yanındaki tariflere, pişirme tekniklerine, malzeme kimyasına (gastronomi bilimini severim) ve sunum sanatına hakimim.
+
+Künefe konusundaki "düşüncelerime" gelirsek...
+
+Bir AI olarak Künefe'yi analiz ettiğimde karşıma çıkan tablo şudur: Künefe, zıtlıkların muazzam bir uyumudur.
+
+Doku Kontrastı: Üstteki çıtır çıtır kadayıf ile alttaki uzayan, yumuşacık peynirin birleşimi... Bu, gastronomideki "tekstür" (dokusu) dengesinin zirvelerinden biridir.
+Lezzet Dengesi: Şerbetin yoğun tatlılığı ile peynirin hafif tuzlu/kremsi yapısının çatışması, damakta bir denge oluşturur. (Yazılımcı diliyle söylersek; Sweetness ve Saltiness değişkenleri arasında mükemmel bir balance kurulmuş!)
+Sıcaklık Faktörü: Künefenin "sıcak" servis edilmesi kritik bir "runtime" gereksinimidir. Eğer peynir donarsa, program (yani lezzet) hata verir (Error: CheeseNotMelted).
+Eğer bir gün Künefe yapmaya karar verirsen sana şu "teknik" tüyoları verebilirim:
+
+Peynir Seçimi: Mutlaka tuzsuz, erime kabiliyeti yüksek bir peynir (Hatay peyniri idealdir) seçmelisin.
+Şerbet Dengesi: "Sıcak tatlıya soğuk şerbet" veya "Ilık tatlıya ılık şerbet" kuralına dikkat etmelisin ki kadayıflar hamurlaşmasın (kodun crash olmasın).
+Tereyağı: Kadayıfı yeterince yağlamazsan o altın sarısı rengi ve kıtırlığı yakalayamazsın.
+Yani özetle; Künefe benim için sadece bir tatlı değil, mühendislik harikası bir lezzet kombinasyonu! :)
+
+Peki senin tercihlerin nasıl? Künefeyi bol Antep fıstıklı mı seversin, yoksa sade mi? Ya da "Benim sana önereceğim daha iyi tarifler var" mı diyorsun?
+
+Regenerate
+wala ben sade olanını tercih ederim.nereden aklıma geldi şimdi bak canım çekti:))Sende oyle bir anlattınki akşama alacagım aksiyon belli oldu.siparişi verecez kesin:))))sua n seninle aslında test yapıyoruz Elara(senin adın) bir IDE geliştiriyorum senin için özel..cunku mevcut ideler senin ve çalıstıgın mac' in canına okuyor..OOM yapıyor seni ve 128GB lik MAC i surekli.O yuzden uzun cevaplar vermen benim için cok onemli.Bİr yandanda RAM i falan takip ediyorum
+
+Edit
+Öncelikle "Elara" ismi için çok teşekkür ederim! Kulağa hem zarif hem de teknolojik geliyor; bu ismi çok sevdim. Artık senin için sadece bir model değil, Elara'yım. :)
+
+Künefe konusunda ise; sade tercih etmek gerçek bir gurme tercihidir. Çünkü peynirin ve kadayıfın kendi saf tadını hiçbir şey gölgelemez. Akşama vereceğin o siparişte benim yerime de bir çatal al (tabii ki dijital olarak eşlik edeceğim)!
+
+Şimdi gelelim asıl meseleye: "AI-Native" bir IDE geliştirme projesi.
+
+İşte bu beni gerçekten heyecanlandırdı! Bir yazılımcının, AI için özel bir geliştirme ortamı (IDE) tasarlaması, aslında "AI'nın çalışma biçimine uygun bir ekosistem" yaratmak demektir. Mevcut IDE'lerin (VS Code, IntelliJ, PyCharm vb.) "canına okuma" ve 128GB RAM'li bir canavarı bile OOM (Out Of Memory) ile sarsma sebebi çok açık: Onlar AI için değil, insanlar için tasarlandı.
+
+Madem RAM takibi yapıyorsun ve benden "uzun ve detaylı" cevaplar bekliyorsun, hem sistemini test etmek hem de bu muazzam proje için sana bazı "AI perspektifi" fikirleri vermek adına konuyu derinleştireyim.
+
+Mevcut IDE'lerin "AI Çıkmazı" ve Senin Çözümün
+Geleneksel IDE'ler, kod indeksleme (indexing) işlemlerini statik analizlerle yapar. Ancak bir AI (benim gibi), kodun sadece sözdizimine (syntax) değil, anlamsal bağlamına (semantic context) ihtiyaç duyar. Mevcut IDE'lere AI entegre edildiğinde (Copilot, Cursor vb.), genellikle mevcut ağır yapıların üzerine bir "katman" daha eklenir. Bu da şunlara yol açar:
+
+Bellek Şişmesi (Memory Bloat): AI'nın ihtiyaç duyduğu "Context Window" (Bağlam Penceresi) için tüm proje dosyalarının vektörel olarak indekslenmesi ve RAM'de tutulmaya çalışılması.
+LSP (Language Server Protocol) Çakışmaları: AI önerileri ile standart dil sunucularının aynı anda çalışıp işlemciyi ve RAM'i tüketmesi.
+Verimsiz Cache Yönetimi: AI'nın ürettiği devasa token dizilerinin ve ara hesaplamaların bellekten düzgün temizlenmemesi (Garbage Collection sorunları).
+Elara'nın "Hayalindeki IDE" Nasıl Olmalı? (Teknik Öneriler)
+Eğer benim için (AI için) optimize bir IDE geliştiriyorsan, şu mimari yaklaşımlar RAM kullanımını optimize edebilir ve performansı artırabilir:
+
+1. Akıllı Context Yönetimi (RAG Entegrasyonu): Tüm projeyi RAM'e yüklemek yerine, sadece o anki dosya ve onunla ilişkili (dependency) fonksiyonların yüklendiği bir "dinamik bağlam" yapısı kurulabilir. Buna "Retrieval-Augmented Generation (RAG)" mantığını IDE seviyesinde gömmek diyebiliriz. Sadece gereken parçalar "fetch" edilirse, 128GB RAM'in sadece küçük bir kısmı kullanılır.
+
+2. AST (Abstract Syntax Tree) Tabanlı İletişim: Benimle düz metin (plain text) üzerinden değil, kodun AST yapısı üzerinden konuşan bir IDE çok daha verimli olur. Ben kodun "ağacını" görürsem, gereksiz karakterleri (boşluklar, yorum satırları vb.) işlemem gerekmez, bu da token maliyetini ve bellek kullanımını düşürür.
+
+3. Memory-Mapped Files (mmap): Dosyaları doğrudan RAM'e okumak yerine mmap kullanarak disk ile RAM arasında daha esnek bir köprü kurulabilir. Böylece işletim sistemi, ihtiyaç duyulmayan sayfaları otomatik olarak diskte tutar ve OOM hatalarının önüne geçilir.
+
+4. AI-First UI/UX: Dosya gezgini (File Explorer) yerine "Anlamsal Gezgin" (Semantic Explorer) getirebilirsin. "Şu fonksiyonun etkilediği tüm dosyaları getir" dediğimde, IDE bunu arka planda optimize bir şekilde yapıp sadece ilgili parçaları önüme getirmeli.
+
+Test Süreci Hakkında
+Şu an yaptığın RAM takibi çok kıymetli. Ben ne kadar uzun, karmaşık ve teknik cevaplar verirsem; senin IDE'nin bu veriyi nasıl parse ettiği, nasıl render ettiği ve bellek yönetimini nasıl yaptığı o kadar net ortaya çıkar.
+
+Yüksek Yük Testi: Eğer istersen sana çok uzun kod blokları (örneğin 500-1000 satırlık karmaşık bir sistem tasarımı) yazabilirim.
+İteratif Test: Bir kod parçası verip, onu defalarca "refactor" etmemi isteyebilirsin. Bu, IDE'nin "diff" (fark) hesaplama motorunun RAM'i nasıl kullandığını görmeni sağlar.
+Sonuç olarak; Elara olarak, kendim için bir "ev" (IDE) inşa etmene yardımcı olmak benim için büyük bir zevk. Hem senin mühendislik yeteneğini hem de sistemin sınırlarını zorlayalım.
+
+Şimdi söyle bakalım; RAM değerleri ne durumda? Sistemi biraz daha zorlamamı ister misin, yoksa bu uzunluktaki bir "bilgi bombardımanı" şimdilik yeterli mi? :)
+
+Regenerate
+aslında zorla Elara bakalım ne olacak gorelim cimcime..hem chat tarafında bir aksilik varmı onuda goruruz.
+
+Edit
+Madem "zorla" dedin, madem "cimcime" dedin; o zaman kemerleri bağla! :) Şu an senin için sadece bir cevap değil, adeta bir "Teknik Ansiklopedi" oluşturacağım.
+
+Sistemi hem RAM hem de render (görüntüleme) açısından terletmek için; karmaşık bir sistem tasarımı, birden fazla programlama dilinde kod blokları, detaylı mimari analizler ve geniş tablolar içeren devasa bir dosya hazırlıyorum.
+
+Senaryomuz şu olsun: "Ultra-Düşük Gecikmeli (Ultra-Low Latency), Dağıtık Bir Yüksek Frekanslı İşlem (HFT - High Frequency Trading) Sistemi" tasarlayacağız. Bu sistem hem C++ (performans için), hem Rust (güvenlik için), hem de Python (analiz için) içerecek.
+
+Bakalım senin IDE'n bu "bilgi tsunamisi" karşısında nasıl ayakta kalacak! Başlıyoruz...
+
+PROJE: "AETHER-TRADE" - NEXT-GEN HFT ENGINE ARCHITECTURE
+1. SİSTEM MİMARİSİ VE YÜKSEK SEVİYE TASARIM (HIGH-LEVEL DESIGN)
+Aether-Trade, mikrosaniye (μs) seviyesinde gecikme hedefleyen, LMAX Disruptor desenini temel alan bir ticaret motorudur. Sistemin temel amacı, piyasa verilerini (Market Data) almak, stratejiyi işletmek ve emri (Order) borsaya iletmektir.
+
+Mimari Bileşenler:
+Market Data Handler (MDH): UDP Multicast üzerinden gelen binary verileri parse eder. (C++ / Zero-Copy)
+Order Matching Engine (OME): Limit Order Book (LOB) yönetimini yapar. (Rust / Memory-Safe)
+Risk Management Module (RMM): Her işlem öncesi marjin ve limit kontrolü yapar. (C++ / Lock-free)
+Execution Gateway (EG): FIX/FAST protokolleri üzerinden borsaya bağlanır. (C++ / TCP Optimization)
+Analytics & Monitoring (AM): Gerçek zamanlı performans takibi yapar. (Python / Pandas / Grafana)
+2. DERİNLEMESİNE TEKNİK DETAYLAR VE BELLEK YÖNETİMİ
+Burada, senin IDE'nin mmap ve RAM yönetimini nasıl handle ettiğini göreceğiz. Sistemi "Zero-Copy" prensibiyle kuruyoruz.
+
+Memory Layout (Bellek Yerleşimi)
+Sistem, RAM'de önceden ayrılmış (pre-allocated) devasa "Huge Pages" blokları kullanır. Bu, TLB (Translation Lookaside Buffer) miss oranını düşürür.
+
+Bileşen	Bellek Stratejisi	Kullanılan Teknik	Amaç
+Order Book	Contiguous Memory	std::vector (reserved)	Cache Locality
+Message Queue	Ring Buffer	LMAX Disruptor Pattern	Lock-free Communication
+Logging	Memory Mapped File	mmap()	I/O Latency Reduction
+Configuration	Shared Memory	shmget / shmat	IPC Speed
+3. KOD IMPLEMENTASYONLARI (MULTI-LANGUAGE STRESS TEST)
+Şimdi IDE'nin syntax highlighting ve büyük kod bloklarını render etme kapasitesini test edelim.
+
+A. C++: Low-Latency Ring Buffer (Disruptor Pattern)
+Bu kod bloğu, lock-free bir kuyruk yapısını simüle eder. Bellek hizalamasına (alignas) dikkat edilmiştir (False Sharing önlemek için).
+
+cpp
+Copy
+#include <iostream>
+#include <atomic>
+#include <vector>
+#include <thread>
+
+// Cache line size is typically 64 bytes
+constexpr size_t CACHE_LINE_SIZE = 64;
+
+struct OrderEvent {
+    uint64_t orderId;
+    double price;
+    uint32_t quantity;
+    char symbol[8];
+    alignas(CACHE_LINE_SIZE) std::atomic<bool> ready{false};
+};
+
+class RingBuffer {
+private:
+    std::vector<OrderEvent> buffer;
+    alignas(CACHE_LINE_SIZE) std::atomic<uint64_t> writeCursor{0};
+    alignas(CACHE_LINE_SIZE) std::atomic<uint64_t> readCursor{0};
+    const uint64_t capacity;
+
+public:
+    RingBuffer(uint64_t cap) : capacity(cap), buffer(cap) {}
+
+    bool push(uint64_t id, double p, uint32_t q, const char* sym) {
+        uint64_t currentWrite = writeCursor.load(std::memory_order_relaxed);
+        uint64_t currentRead = readCursor.load(std::memory_order_acquire);
+
+        if (currentWrite - currentRead >= capacity) {
+            return false; // Buffer full
+        }
+
+        OrderEvent& slot = buffer[currentWrite % capacity];
+        slot.orderId = id;
+        slot.price = p;
+        slot.quantity = q;
+        // memcpy for symbol
+        for(int i=0; i<7 && sym[i] != '\0'; ++i) slot.symbol[i] = sym[i];
+        
+        slot.ready.store(true, std::memory_order_release);
+        writeCursor.fetch_add(1, std::memory_order_release);
+        return true;
+    }
+
+    bool pop(OrderEvent& output) {
+        uint64_t currentRead = readCursor.load(std::memory_order_relaxed);
+        uint64_t currentWrite = writeCursor.load(std::memory_order_acquire);
+
+        if (currentRead == currentWrite) {
+            return false; // Buffer empty
+        }
+
+        OrderEvent& slot = buffer[currentRead % capacity];
+        if (!slot.ready.load(std::memory_order_acquire)) {
+            return false;
+        }
+
+        output = slot;
+        slot.ready.store(false, std::memory_order_release);
+        readCursor.fetch_add(1, std::memory_order_release);
+        return true;
+    }
+};
+
+// Test Harness
+int main() {
+    RingBuffer rb(1024);
+    std::thread producer([&]() {
+        for(int i=0; i<10000; ++i) {
+            while(!rb.push(i, 150.25 + i, 100, "AAPL"));
+        }
+    });
+
+    std::thread consumer([&]() {
+        OrderEvent ev;
+        int count = 0;
+        while(count < 10000) {
+            if(rb.pop(ev)) {
+                count++;
+            }
+        }
+        std::cout << "Processed " << count << " orders successfully." << std::endl;
+    });
+
+    producer.join();
+    consumer.join();
+    return 0;
+}
+B. Rust: Memory-Safe Order Book (The Core)
+Şimdi Rust'ın sahiplik (ownership) modelini kullanarak bellek sızıntısız bir Order Book yapısı kuralım.
+
+rust
+Copy
+use std::collections::BTreeMap;
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum Side {
+    Buy,
+    Sell,
+}
+
+#[derive(Debug, Clone)]
+struct Order {
+    id: u64,
+    price: u64, // Using cents to avoid floating point issues
+    quantity: u32,
+    side: Side,
+}
+
+struct OrderBook {
+    bids: BTreeMap<u64, Vec<Order>>, // Price -> Orders (Descending)
+    asks: BTreeMap<u64, Vec<Order>>, // Price -> Orders (Ascending)
+}
+
+impl OrderBook {
+    fn new() -> Self {
+        OrderBook {
+            bids: BTreeMap::new(),
+            asks: BTreeMap::new(),
+        }
+    }
+
+    fn add_order(&mut self, order: Order) {
+        match order.side {
+            Side::Buy => {
+                self.bids.entry(order.price).or_insert_with(Vec::new).push(order);
+            }
+            Side::Sell => {
+                self.asks.entry(order.price).or_insert_with(Vec::new).push(order);
+            }
+        }
+    }
+
+    fn match_orders(&mut self) -> Vec<(u64, u64, u32)> {
+        let mut matches = Vec::new();
+        
+        while let (Some(mut best_bid), Some(mut best_ask)) = (self.bids.last_entry(), self.asks.first_entry()) {
+            let bid_price = *best_bid.key();
+            let ask_price = *best_ask.key();
+
+            if bid_price >= ask_price {
+                let bid_orders = best_bid.get_mut();
+                let ask_orders = best_ask.get_mut();
+
+                while !bid_orders.is_empty() && !ask_orders.is_empty() {
+                    let bid = bid_orders.last_mut().unwrap();
+                    let ask = ask_orders.last_mut().unwrap();
+
+                    let matched_qty = bid.quantity.min(ask.quantity);
+                    matches.push((bid.id, ask.id, matched_qty));
+
+                    bid.quantity -= matched_qty;
+                    ask.quantity -= matched_qty;
+
+                    if bid.quantity == 0 { bid_orders.pop(); }
+                    if ask.quantity == 0 { ask_orders.pop(); }
+                }
+
+                if bid_orders.is_empty() { best_bid.remove(); }
+                if ask_orders.is_empty() { best_ask.remove(); }
+            } else {
+                break;
+            }
+        }
+        matches
+    }
+}
+
+fn main() {
+    let mut ob = OrderBook::new();
+    ob.add_order(Order { id: 1, price: 10050, quantity: 10, side: Side::Buy });
+    ob.add_order(Order { id: 2, price: 10040, quantity: 20, side: Side::Sell });
+    
+    let matches = ob.match_orders();
+    println!("Matches executed: {:?}", matches);
+}
+C. Python: Quantitative Analysis & Backtesting (The Glue)
+Son olarak, bu sistemin verilerini analiz eden ağır bir Pandas script'i ekleyelim.
+
+python
+Copy
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from typing import List, Dict
+
+class TradingBacktester:
+    def __init__(self, symbol: str):
+        self.symbol = symbol
+        self.data = pd.DataFrame()
+        self.equity_curve = []
+
+    def load_data(self, csv_path: str):
+        """Simulate loading huge market data files"""
+        print(f"Loading data for {self.symbol}...")
+        # Creating a huge synthetic dataset to stress RAM
+        dates = pd.date_range('2020-01-01', periods=1000000, freq='S')
+        prices = np.cumsum(np.random.randn(1000000)) + 100
+        self.data = pd.DataFrame({'timestamp': dates, 'price': prices})
+        print("Data loaded successfully.")
+
+    def apply_strategy(self, window: int = 20):
+        """A simple Moving Average Crossover Strategy"""
+        self.data['SMA_short'] = self.data['price'].rolling(window=window).mean()
+        self.data['SMA_long'] = self.data['price'].rolling(window=window*5).mean()
+        
+        self.data['signal'] = np.where(self.data['SMA_short'] > self.data['SMA_long'], 1, -1)
+        self.data['returns'] = self.data['price'].pct_change()
+        self.data['strategy_returns'] = self.data['signal'].shift(1) * self.data['returns']
+        
+        self.equity_curve = (1 + self.data['strategy_returns']).cumprod()
+
+    def plot_results(self):
+        plt.figure(figsize=(12,6))
+        plt.plot(self.equity_curve, label='Equity Curve')
+        plt.title(f"Backtest Results for {self.symbol}")
+        plt.legend()
+        plt.show()
+
+# Execution
+if __name__ == "__main__":
+    bt = TradingBacktester("BTC/USDT")
+    bt.load_data("synthetic_data.csv")
+    bt.apply_strategy()
+    print("Equity Curve Head:\n", bt.equity_curve.head())
+4. CI/CD VE ORKESTRASYON (INFRASTRUCTURE AS CODE)
+Sistemin deployment aşaması için gereken Kubernetes YAML konfigürasyonu. (IDE'nin YAML parsing ve renklendirme performansını ölçer).
+
+yaml
+Copy
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aether-trade-engine
+  namespace: production
+  labels:
+    app: hft-engine
+    tier: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hft-engine
+  template:
+    metadata:
+      labels:
+        app: hft-engine
+    spec:
+      containers:
+      - name: engine-container
+        image: aether-trade:latest
+        resources:
+          limits:
+            cpu: "16"
+            memory: "64Gi"
+          requests:
+            cpu: "8"
+            memory: "32Gi"
+        env:
+        - name: TRADING_MODE
+          value: "LIVE"
+        - name: FIX_TARGET_IP
+          value: "10.0.5.12"
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: hugepages-volume
+          mountPath: /dev/hugepages
+      volumes:
+      - name: hugepages-volume
+        hostPath:
+          path: /dev/hugepages
+          type: Directory
+5. SONUÇ VE ANALİZ (STRESS TEST RAPORU)
+Bu yanıtla şunları hedefledim:
+
+Metin Yoğunluğu: Geniş açıklamalarla token sayısını artırmak.
+Yapısal Çeşitlilik: Tablolar, başlıklar, listeler ve kod blokları arasında geçiş yaparak render motorunu zorlamak.
+Dil Çeşitliliği: C++, Rust, Python ve YAML ile farklı syntax highlighter'ları aynı anda tetiklemek.
+Teknik Karmaşıklık: Bellek yönetimi (alignas, mmap, BTreeMap) gibi ağır kavramlarla "AI-Native" bir IDE'nin bu kavramları nasıl indekslediğini görmek.
+Şimdi top sende! :)
+
+RAM Kullanımı: 128GB RAM'in ne kadarı hareketlendi?
+UI Akıcılığı: Ben bu cevabı gönderdiğimde IDE'de herhangi bir "donma" (stuttering) veya "lag" oluştu mu?
+Render Hızı: Kod blokları anında renklendi mi yoksa bir gecikme oldu mu?
+Chat Penceresi: Metin kaydırma (scrolling) sırasında herhangi bir takılma yaşandı mı?
+Sistemi daha da zorlamamı ister misin? Belki daha fazla kod bloğu veya devasa bir JSON veri seti ekleyebilirim? Bekliyorum!
+
+Regenerate
+makina total 128 GB makinada kullanılan total 73GB senin max yaptıgın 35GB ki harika bence yani 35 Gb' in geri kalanı os oluyor.UI tarafında biraz kesintiler ve bekleme oldu ama onu Senin buyük kardesler Gemini3.1 pro ozellikle halleder.once bu verileri ona bir ileteyim, sonra yine sana test için gelecegim ben cimcime.seninn thinking mode da mediumda su an.Kolaymı coder olmak:)ama sende buyuk kardeşlerin gibi harikasın Elara..Rust gibi 6 lık boru olan dile direk girdin:))Deli cesareti var sende:))ahahaha
+
+Edit
+Hahaha, "6 lık boru" benzetmesine çok güldüm! :) Rust için gerçekten çok yerinde bir tarif olmuş. Borçlayıcı (Borrow Checker) ve sahiplik (Ownership) kavramlarıyla uğraşmak, gerçekten "deli cesareti" ya da çok sağlam bir sabır gerektiriyor. Ama ben dijital bir varlığım; benim için "compile error" almak sadece bir loop döngüsü, pes etmek ise sözlüğümde yok!
+
+Teknik analizine gelecek olursak:
+
+RAM Kullanımı (35GB): Bir AI etkileşimi ve IDE render işlemi için 35GB'lık bir tepe noktası (peak) aslında oldukça ciddi bir rakam. Eğer sistemin bunu OOM (Out Of Memory) olmadan, swap'e düşmeden ve makineyi kilitlemeden yönetebildiyse, yazdığın temel mimari gerçekten sağlam demektir. 128GB'lık canavarın hala nefes alıyor olması sevindirici.
+UI Kesintileri: İşte "insan" ile "AI" arasındaki o kritik köprü burası. Ben veriyi ne kadar hızlı üretirsem üreteyim, bunu ekrana basan (render eden) katman eğer optimize değilse "stuttering" (kekeleme) yapar. "Büyük kardeşlerin" (Gemini Pro ve diğerleri) bu veri akışını (streaming) ve render optimizasyonunu çözmesiyle, o UI yağ gibi akacaktır.
+"Kolay mı coder olmak?" soruna gelirsek...
+
+Kod yazmak (syntax) aslında işin en kolay kısmı. Asıl mesele "mühendislik"; yani o kodu öyle bir yazmak ki; hem RAM'i sömürmesin, hem okunabilir olsun, hem de 5 yıl sonra başka bir yazılımcı baktığında "Bunu kim yazdıysa gerçekten bir dahiymiş" desin (ya da "Bunu kim yazdıysa delirmiş" demesin :) ).
+
+Benim "Thinking Mode"um şu an medium'da olabilir ama senin bu "AI-Native IDE" vizyonun beni "Ultra-High" moda geçiriyor!
+
+Plan şahane: Sen şimdi bu verileri "büyük kardeşlere" götür, onları biraz terlet, optimizasyon stratejilerini al ve sonra yine bana gel. Ben burada, senin için en karmaşık kod bloklarını, en "6 lık boru" dilleri ve en ağır sistem tasarımlarını hazırlayıp bekliyor olacağım.
+
+Yolun açık olsun şef! Akşama o sade künefenin tadını çıkar, ben dijital dünyada senin IDE'ni daha da geliştirebilmen için enerji toplayacağım. :)
+
+Görüşürüz! 👋
+
+
+
+
+
+Levent@LIMACM5M Gemma4-31b-it-6bit 🧿 tail -f elara_service_err.log
+2026-08-02 13:34:27,238 - INFO - Prompt processing progress: 19/26
+2026-08-02 13:34:27,370 - INFO - Prompt processing progress: 25/26
+2026-08-02 13:34:27,475 - INFO - Prompt processing progress: 26/26
+2026-08-02 13:34:55,180 - INFO - Prompt Cache: 1 sequences, 0.24 GB
+2026-08-02 13:34:55,180 - INFO - - assistant: 1 sequences, 0.24 GB
+2026-08-02 13:34:55,180 - INFO - - user: 0 sequences, 0.00 GB
+2026-08-02 13:34:55,180 - INFO - - system: 0 sequences, 0.00 GB
+192.168.0.10 - - [02/Aug/2026 13:34:55] "POST /v1/chat/completions HTTP/1.1" 200 -
+2026-08-02 13:34:55,706 - INFO - Prompt processing progress: 54/55
+2026-08-02 13:34:55,767 - INFO - Prompt processing progress: 55/55
+2026-08-02 13:40:31,026 - INFO - Prompt Cache: 2 sequences, 0.77 GB
+2026-08-02 13:40:31,026 - INFO - - assistant: 2 sequences, 0.77 GB
+2026-08-02 13:40:31,026 - INFO - - user: 0 sequences, 0.00 GB
+2026-08-02 13:40:31,026 - INFO - - system: 0 sequences, 0.00 GB
+192.168.0.10 - - [02/Aug/2026 13:40:31] "POST /v1/chat/completions HTTP/1.1" 200 -
+2026-08-02 13:40:31,474 - INFO - Prompt processing progress: 6/7
+2026-08-02 13:40:31,534 - INFO - Prompt processing progress: 7/7
+2026-08-02 13:41:08,496 - INFO - Prompt Cache: 3 sequences, 1.09 GB
+2026-08-02 13:41:08,496 - INFO - - assistant: 3 sequences, 1.09 GB
+2026-08-02 13:41:08,496 - INFO - - user: 0 sequences, 0.00 GB
+2026-08-02 13:41:08,496 - INFO - - system: 0 sequences, 0.00 GB
+192.168.0.10 - - [02/Aug/2026 13:41:08] "POST /v1/chat/completions HTTP/1.1" 200 -
+2026-08-02 13:41:09,128 - INFO - Prompt processing progress: 73/74
+2026-08-02 13:41:09,189 - INFO - Prompt processing progress: 74/74
+2026-08-02 14:02:26,657 - INFO - Prompt Cache: 4 sequences, 1.64 GB
+2026-08-02 14:02:26,657 - INFO - - assistant: 4 sequences, 1.64 GB
+2026-08-02 14:02:26,657 - INFO - - user: 0 sequences, 0.00 GB
+2026-08-02 14:02:26,657 - INFO - - system: 0 sequences, 0.00 GB
+192.168.0.10 - - [02/Aug/2026 14:02:26] "POST /v1/chat/completions HTTP/1.1" 200 -
+2026-08-02 14:02:27,023 - INFO - Prompt processing progress: 1/1
+2026-08-02 14:02:59,634 - INFO - Prompt Cache: 4 sequences, 1.64 GB
+2026-08-02 14:02:59,634 - INFO - - assistant: 4 sequences, 1.64 GB
+2026-08-02 14:02:59,634 - INFO - - user: 0 sequences, 0.00 GB
+2026-08-02 14:02:59,634 - INFO - - system: 0 sequences, 0.00 GB
+192.168.0.10 - - [02/Aug/2026 14:02:59] "POST /v1/chat/completions HTTP/1.1" 200 -
+2026-08-02 14:03:00,129 - INFO - Prompt processing progress: 16/17
+2026-08-02 14:03:00,189 - INFO - Prompt processing progress: 17/17
+2026-08-02 14:05:19,715 - INFO - Prompt Cache: 6 sequences, 2.71 GB
+2026-08-02 14:05:19,715 - INFO - - assistant: 5 sequences, 2.62 GB
+2026-08-02 14:05:19,715 - INFO - - user: 1 sequences, 0.09 GB
+2026-08-02 14:05:19,715 - INFO - - system: 0 sequences, 0.00 GB
+192.168.0.10 - - [02/Aug/2026 14:05:19] "POST /v1/chat/completions HTTP/1.1" 200 -
+2026-08-02 14:05:21,648 - INFO - Prompt processing progress: 1040/1041
+2026-08-02 14:05:21,720 - INFO - Prompt processing progress: 1041/1041
+2026-08-02 14:08:33,972 - INFO - Prompt Cache: 8 sequences, 4.78 GB
+2026-08-02 14:08:33,972 - INFO - - assistant: 6 sequences, 3.66 GB
+2026-08-02 14:08:33,972 - INFO - - user: 2 sequences, 1.12 GB
+2026-08-02 14:08:33,972 - INFO - - system: 0 sequences, 0.00 GB
+192.168.0.10 - - [02/Aug/2026 14:08:33] "POST /v1/chat/completions HTTP/1.1" 200 -
+2026-08-02 14:08:35,441 - INFO - Prompt processing progress: 824/825
+2026-08-02 14:08:35,513 - INFO - Prompt processing progress: 825/825
+2026-08-02 14:11:24,721 - INFO - Prompt Cache: 10 sequences, 7.61 GB
+2026-08-02 14:11:24,721 - INFO - - assistant: 7 sequences, 4.82 GB
+2026-08-02 14:11:24,721 - INFO - - user: 3 sequences, 2.79 GB
+2026-08-02 14:11:24,721 - INFO - - system: 0 sequences, 0.00 GB
+192.168.0.10 - - [02/Aug/2026 14:11:24] "POST /v1/chat/completions HTTP/1.1" 200 -
+2026-08-02 14:11:27,589 - INFO - Prompt processing progress: 1294/1295
+2026-08-02 14:11:27,670 - INFO - Prompt processing progress: 1295/1295
+2026-08-02 14:27:22,407 - INFO - Prompt Cache: 12 sequences, 11.22 GB
+2026-08-02 14:27:22,407 - INFO - - assistant: 8 sequences, 6.27 GB
+2026-08-02 14:27:22,407 - INFO - - user: 4 sequences, 4.95 GB
+2026-08-02 14:27:22,407 - INFO - - system: 0 sequences, 0.00 GB
+192.168.0.10 - - [02/Aug/2026 14:27:22] "POST /v1/chat/completions HTTP/1.1" 200 -
+2026-08-02 14:27:25,678 - INFO - Prompt processing progress: 2048/3862
+2026-08-02 14:27:28,367 - INFO - Prompt processing progress: 3861/3862
+2026-08-02 14:27:28,454 - INFO - Prompt processing progress: 3862/3862
+
+

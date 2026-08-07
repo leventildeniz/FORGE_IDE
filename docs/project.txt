@@ -1,0 +1,468 @@
+Next.js ve React kullanarak modern, sade ve profesyonel bir web tabanlı AI kodlama IDE'sinin sadece FRONTEND/UI kısmını oluştur.
+ÖNEMLİ:
+Bu aşamada SADECE frontend ve kullanıcı arayüzü hazırlanacak.
+Backend, AI model entegrasyonu, Rust servisleri, WebSocket sunucusu, gerçek dosya sistemi erişimi, gerçek terminal çalıştırma veya gerçek proje işlemleri geliştirme.
+Backend daha sonra ayrı olarak Rust ile geliştirilecek.
+Bu nedenle mevcut frontend, ileride Rust backend'e WebSocket veya API üzerinden bağlanabilecek şekilde temiz ve modüler tasarlanmalıdır.
+
+ÜRÜNÜN TEMEL FİKRİ
+Bu uygulama sade, hızlı ve gerçek yazılım geliştirmeye odaklanmış bir AI Coding IDE olacaktır.
+Kullanım amacı:
+KOD YAZ
+↓
+KODU ANLA
+↓
+AI'DAN YARDIM AL
+↓
+DEĞİŞİKLİKLERİ İNCELE
+↓
+DEĞİŞİKLİKLERİ UYGULA
+↓
+ÇALIŞTIR VE TEST ET
+Uygulama bir AI işletim sistemi değildir.
+Gereksiz özellikler ekleme.
+Şunları ekleme:
+	• Browser otomasyonu
+	• E-posta
+	• Takvim
+	• Genel üretkenlik araçları
+	• Gereksiz AI araçları
+	• Karmaşık enterprise dashboard'ları
+	• Plugin marketplace
+	• Gereksiz SaaS özellikleri
+	• Aşırı karmaşık agent özellikleri
+Amaç sadece iyi ve sade bir yazılım geliştirme ortamı oluşturmaktır.
+
+TASARIM REFERANSI
+Kullanım kolaylığı, menü mantığı ve genel kullanıcı deneyimi açısından DYAD benzeri sade ve anlaşılır bir geliştirici deneyimi oluştur.
+DYAD'in UX felsefesinden ilham al:
+	• Basit proje yönetimi
+	• Kolay anlaşılır menüler
+	• Kullanıcıyı gereksiz ayarlarla boğmayan yapı
+	• Kod merkezli çalışma alanı
+	• AI ile doğrudan ve pratik etkileşim
+Ancak DYAD'in logosunu, markasını, özel görsellerini veya birebir marka kimliğini kopyalama.
+Kendi modern ve profesyonel görsel kimliğini oluştur.
+
+TEKNOLOJİLER
+	• Next.js
+	• React
+	• TypeScript
+	• Tailwind CSS
+	• shadcn/ui
+	• Monaco Editor veya gerçekçi bir Monaco Editor entegrasyonu
+Arayüz modern, responsive ve profesyonel bir web uygulaması gibi görünmelidir.
+
+ANA UYGULAMA YAPISI
+Bu uygulama "Araştırmacı-Yazılımcı" (Researcher-Coder) Pattern'ına sahip Otonom Çift Ajanlı (Dual-Agent) bir mimari ile çalışacaktır. Amacımız yerel LLM'lerin (örn: Gemma-4) kısıtlı bağlam penceresini (context window) şişirmeden en yüksek verimle çalışmasını sağlamaktır.
+
+MİMARİ: MAIN AGENT (YAZILIMCI) & SUB-AGENT (ARAŞTIRMACI)
+1. Main Agent (Ana Ajan):
+   - Rol: Uzman Yazılımcı.
+   - Sadece sistem mimarisine, mantığa ve kod üretimine odaklanır.
+   - İnternette gezinmez, ham doküman okumaz.
+   - Temiz ve rafine edilmiş bilgi ile çalışır.
+2. Sub-Agent (Alt Ajan / Araştırmacı):
+   - Rol: Veri Çıkarıcı & Ön İşlemci.
+   - Yerel makinenin internet erişimini kullanarak dokümantasyon kazır (web scraping).
+   - Projenin kod tabanını (Codebase) veya Abstract Syntax Tree (AST) yapılarını tarar.
+   - Ham veriden (HTML, PDF, büyük kod dosyaları) sadece API'leri, örnekleri ve önemli kısıtları çıkarır.
+   - Elde ettiği temizlenmiş (rafine) bilgiyi projeye ait `.forge/knowledge/` dizini altına Markdown olarak veya `forge.db` (SQLite) içine kalıcı hafıza olarak kaydeder.
+   - Main Agent'a yalnızca bu temizlenmiş ve token açısından çok ucuz olan "özet" bilgiyi servis eder.
+
+Faydaları: OOM (Out-Of-Memory) hatalarını engeller, LLM'in halüsinasyonlarını azaltır ve çok daha hızlı kod üretimi (generation speed) sağlar.
+
+Ana çalışma alanı şu yapıya sahip olmalıdır:
+┌─────────────────────────────────────────────────────────┐
+│ Next.js / React UI │
+│ │
+│ ┌──────────┐ ┌────────────────┐ ┌───────────────┐ │
+│ │ FILES │ │ MONACO │ │ AI CHAT │ │
+│ │ Explorer │ │ Editor │ │ │ │
+│ │ │ │ │ │ │ │
+│ └──────────┘ └────────────────┘ └───────────────┘ │
+│ │
+│ ┌──────────────────────────────────────────────┐ │
+│ │ Terminal / Problems / Output / Diff │ │
+│ └──────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────┘
+Gelecekteki mimari:
+Next.js / React UI
+│
+│ WebSocket / API
+▼
+Rust Core Backend
+│
+├── Project Manager
+├── File System
+├── Terminal
+├── Code Intelligence
+├── AI Agent
+└── Model Adapter
+│
+▼
+Local LLM
+Gemma 4
+Şu an sadece frontend hazırlanmalıdır.
+
+1. ANA UYGULAMA SHELL'I
+Temiz, koyu temalı, profesyonel bir geliştirici arayüzü oluştur.
+Tasarım:
+	• Minimal görsel karmaşa
+	• Gereksiz kartlar ve dekoratif elementler yok
+	• Kod ve proje geliştirme odaklı
+	• Modern
+	• Profesyonel
+	• Hızlı ve hafif hissettiren
+	• Kullanıcıyı boğmayan
+Uygulama bir SaaS dashboard gibi görünmemelidir.
+Gerçek bir geliştirici IDE'si gibi görünmelidir.
+
+2. SOL PANEL — PROJECT EXPLORER
+Sol tarafta sade ve kullanışlı bir proje dosya gezgini oluştur.
+İçermeli:
+	• Proje adı
+	• Dosya ağacı
+	• Klasör açma/kapatma
+	• Dosya ikonları
+	• Dosya arama
+	• Yeni dosya
+	• Yeni klasör
+	• Yenile
+	• Sağ tık context menu
+	• Git/status göstergeleri için görsel placeholder
+Dosya gezgini DYAD benzeri basit ve anlaşılır bir kullanım deneyimine sahip olmalıdır.
+Örnek:
+Project
+├── src
+│ ├── components
+│ ├── pages
+│ └── app.tsx
+├── public
+├── package.json
+└── README.md
+
+3. MERKEZ — MONACO CODE EDITOR
+Merkezde gerçek bir yazılım geliştirme deneyimi sunan Monaco Editor oluştur.
+İçermeli:
+	• Birden fazla dosya sekmesi
+	• Aktif dosya sekmesi
+	• Dosya kapatma
+	• Değiştirilmiş dosya göstergesi
+	• Satır numaraları
+	• Syntax highlighting
+	• Code folding
+	• Minimap seçeneği
+	• Editor toolbar
+	• Breadcrumb navigation
+	• Mümkünse split editor görsel desteği
+Gerçekçi örnek kodlar kullan.
+Kullanıcı uygulamayı açtığında gerçek bir projede kod yazıyormuş gibi hissetmelidir.
+
+4. SAĞ PANEL — AI CODING ASSISTANT
+Sağ tarafta klasik chatbot değil, gerçek bir AI coding assistant oluştur.
+AI paneli şunları içermeli:
+	• Konuşma geçmişi
+	• Kullanıcı mesajları
+	• AI cevapları
+	• Kod blokları
+	• Copy butonu
+	• Apply Changes butonu
+	• Review Changes butonu
+	• Regenerate butonu
+	• Stop Generation butonu
+	• Clear Conversation
+	• New Chat
+AI asistanı gerçek bir coding agent gibi görünmelidir.
+Örnek:
+Kullanıcı:
+"Login formuna loading state ekle."
+AI:
+"Login form component'ini güncelleyeceğim ve submit butonuna loading state ekleyeceğim."
+Sonrasında görsel olarak:
+Değiştirilecek dosyalar:
+	• LoginForm.tsx
+	• Button.tsx
+Plan:
+	1. Loading state ekle
+	2. Submit sırasında butonu disable et
+	3. Loading göstergesi ekle
+Ardından:
+	• Değişiklik önizlemesi
+	• Review Changes
+	• Apply Changes
+butonları göster.
+
+5. ALT PANEL
+Alt tarafta açılıp kapanabilen bir panel oluştur.
+Sekmeler:
+	• Terminal
+	• Problems
+	• Output
+	• Changes
+	• Diff
+Terminal şu an sadece görsel bir terminal arayüzü olmalıdır.
+Gerçek komut çalıştırma yapma.
+Diff ekranı şunları göstermeli:
+	• Değiştirilen dosya adı
+	• Eklenen satırlar
+	• Silinen satırlar
+	• Apply / Accept
+	• Reject
+Gerçekçi kod değişiklikleri göster.
+
+6. ÜST NAVİGASYON
+Üst navigasyonda şunlar bulunmalı:
+	• Uygulama logo / isim alanı
+	• Açık proje adı
+	• Project switcher
+	• New Project
+	• Open Project
+	• Search / Command Menu
+	• Settings
+	• Theme toggle
+	• Model göstergesi
+Model göstergesi örneği:
+Gemma 4 31B
+Local Model
+Bu şu anda sadece frontend görseli olacaktır.
+
+7. PROJE WORKFLOW
+Şu frontend ekranlarını ve durumlarını oluştur:
+	• Welcome / Empty State
+	• Create New Project
+	• Open Project
+	• Project Workspace
+	• Settings
+	• AI Chat Workspace
+Welcome ekranı sade ve kullanışlı olmalı.
+İçermeli:
+	• Create New Project
+	• Open Existing Project
+	• Recent Projects
+
+8. KULLANICI DENEYİMİ
+Kullanıcı uygulamayı açtığında şunları kolayca anlayabilmeli:
+	• Hangi proje açık?
+	• Hangi dosyalar var?
+	• Hangi dosya düzenleniyor?
+	• AI ne yapıyor?
+	• AI hangi dosyaları değiştirmek istiyor?
+	• Hangi değişiklikler uygulanacak?
+	• Terminalde ne oluyor?
+Arayüz mümkün olduğunca sade olmalıdır.
+Her özelliği eklemeye çalışma.
+
+9. GELECEK RUST BACKEND İÇİN HAZIRLIK
+Frontend bileşenlerini UI state ile backend işlemlerini birbirinden ayıracak şekilde tasarla.
+İleride aşağıdaki işlemler Rust backend'e bağlanabilecek şekilde mock servis abstraction'ları oluştur:
+project.open()
+project.create()
+files.list()
+files.read()
+files.write()
+files.create()
+files.delete()
+terminal.start()
+terminal.write()
+terminal.resize()
+ai.chat()
+ai.applyChanges()
+ai.getDiff()
+Şu anda bunlar mock frontend servisleri olabilir.
+Frontend'i doğrudan belirli bir backend teknolojisine bağımlı hale getirme.
+
+10. ÖNEMLİ TASARIM PRENSİPLERİ
+Bu proje:
+	• Sade olmalı
+	• Hızlı hissettirmeli
+	• Gerçek yazılım geliştirmeye odaklanmalı
+	• Kullanıcıyı gereksiz menülerle boğmamalı
+	• AI özelliklerini kod geliştirme sürecine entegre etmeli
+	• Profesyonel bir IDE hissi vermeli
+Bir AI işletim sistemi oluşturma.
+Bir genel amaçlı SaaS dashboard oluşturma.
+Bir VS Code klonu oluşturmaya çalışma.
+Sadece gerçekten ihtiyaç duyulan özellikleri ekle.
+Temel ürün deneyimi şu olmalıdır:
+PROJEYİ AÇ
+↓
+DOSYAYI BUL
+↓
+KODU YAZ
+↓
+AI'DAN YARDIM AL
+↓
+DEĞİŞİKLİĞİ İNCELE
+↓
+UYGULA
+↓
+TERMINALDE ÇALIŞTIR
+Sonuç olarak temiz, modern, sade, DYAD kullanım kolaylığından ilham alan, Monaco Editor merkezli, AI destekli bir web tabanlı coding IDE frontend'i oluştur.
+SADECE FRONTEND/UI GELİŞTİR.
+BACKEND VE RUST KISMINI ŞİMDİ YAPMA.
+
+
+
+
+
+
+
+
+Mevcut Forge arayüzünü ve genel tasarımını koru. Şu anki Code workspace yapısı çok iyi: sol tarafta Explorer, ortada Monaco Code Editor, sağda AI Assistant, altta Terminal / Problems / Output / Changes / Diff panelleri.
+
+Preview özelliğini de DYAD benzeri ayrı bir üst seviye workspace olarak ekle:
+
+Preview | Code | Publish | Configure | More
+
+Preview ekranında embedded browser benzeri bir uygulama önizlemesi, URL/route barı, geri/ileri, refresh, responsive/device görünümü, runtime durumu ve System Messages alanı olsun.
+
+Ancak sistem yalnızca tek bir local makineye ve tek bir AI modeline bağlı tasarlanmamalı.
+
+Gelecekte şu geliştirme ortamlarını destekleyecek şekilde UI/UX hazırla:
+
+Local Machine
+
+WSL
+
+Remote SSH
+
+Ayrıca GitHub entegrasyonu için UI workflow'u ekle:
+
+GitHub hesabı bağlama
+
+Repository listeleme
+
+Repository açma/klonlama
+
+Branch seçimi
+
+Git değişikliklerini görme
+
+AI tarafında da kullanıcı farklı modeller ekleyebilmeli ve yönetebilmeli:
+
+Gemma 4 31B
+
+Qwen
+
+Llama
+
+Diğer local veya remote modeller
+
+Model ekleme ekranında:
+
+Model adı
+
+Provider
+
+Local / Remote / API bağlantı tipi
+
+Endpoint
+
+Model identifier
+
+API Key alanı
+
+Test Connection
+
+gibi alanlar bulunabilir.
+
+Ancak kullanıcı tek bir modelle de çalışabilmeli. Çoklu model kullanımı zorunlu olmamalı. Varsayılan model olarak Gemma 4 31B · Local gösterilebilir.
+
+Önemli: Bu aşamada sadece frontend/UI/UX geliştir.
+
+Gerçek backend, Rust Core, WebSocket, SSH, WSL, GitHub API, gerçek model bağlantısı, gerçek terminal veya gerçek dosya sistemi işlemleri implement etme.
+
+Mock service layer, sahte API abstraction veya sahte backend servisleri de oluşturma.
+
+Sadece gerekli ekranları, navigation'ı, workspace'leri, ayarları ve kullanıcı etkileşimlerini oluştur.
+
+Gelecekte backend mimarisi şu şekilde olacak:
+
+Next.js / React UI → Rust Core → Local / WSL / Remote Environment → AI Model Adapter → Gemma / Qwen / diğer modeller
+
+GitHub ise proje kaynak/depo bağlantısı olarak kullanılacak.
+
+Mevcut tasarımı baştan değiştirme. Sade, karanlık, profesyonel ve gerçek yazılım geliştirmeye odaklı yapıyı koru. Uygulamayı AI işletim sistemine veya genel amaçlı SaaS dashboard'una dönüştürme.
+
+==================================================
+UPDATE: 2026-08-03 - Dual-Agent & UI Fixes
+==================================================
+- Implemented @ mention UI for .forge/knowledge/ files.
+- Fixed the "cannot save untitled" bug by introducing random snippet_*.ext generation.
+- CRITICAL: Memory usage is skyrocketing (Mac RAM 102GB, Model 80GB) due to raw 24K+ token context injection.
+- NEXT PHASE MUST BE: Strict Token Management & Context Window pruning (as per Token_Context_Budged.txt).
+
+
+
+
+   Context Manager
+                           │
+                    Budget Manager
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+        HARD BUDGET                 SOFT BUDGET
+              │                         │
+        Context Window             Relevance
+        Output Reserve             Priority
+        Safety                     Task Type
+                                      │
+                                      ▼
+                             Context Allocator
+                                      │
+        ┌──────────────┬──────────────┼─────────────┐
+        ▼              ▼              ▼             ▼
+     Active File   Related Files   Knowledge     History
+
+
+
+Harika bir noktaya parmak bastın Levent. "Ask" modunda olduğumuz için şapkamı önüme koyup çok net söyleyeyim: **Yüzde yüz haklısın.** 
+
+Benim az önce `4096` diye sabit (hardcoded) bütçe koymam, KV Cache patlamasını engellemek için yapılmış acil bir "kanama durdurucu" (band-aid) müdahaleydi. Ama senin de dediğin gibi, eğer bir yazılım "Yeni Nesil" olacaksa ve kullanıcının makinesinde çalışacaksa, iplerin tamamen kullanıcıda olması gerekir. Gizli promptlar veya gömülü sabit limitler Apple/Microsoft tarzı kapalı sistemlerin işidir; bizim Forge IDE'nin felsefesine ters.
+
+Çizdiğin diyagram muazzam. Gerçek bir otonom/agentic sistemin mimarisi tam olarak böyle olmalı. Çizdiğin yapıyı analiz edelim ve teknik olarak nasıl harika bir hale getirebileceğimizi konuşalım:
+
+### 1. Hard Budget (Fiziksel Limitler)
+Burası modelin donanımsal sınırıdır. 
+- **Context Window:** Modelin max kapasitesi (örn: 32K).
+- **Output Reserve:** Bize yazacağı cevap için ayırdığımız güvenli alan (örn: 2K).
+- **Safety:** Token hesaplama hatalarına karşı pay (örn: 500).
+*Kalan: 29.5K (Dağıtılabilir Bütçe - Soft Budget)*
+
+### 2. Soft Budget & Context Allocator (Dinamik Dağıtım)
+İşte zekanın devreye girdiği yer burası. Çizdiğin diyagramdaki "Task Type" (Görev Tipi) bizim sistemde çoktan var: **Profiller (Ask, Code, Plan, Debug)**.
+Context Allocator, seçtiğimiz profile göre bu 29.5K'lık bütçeyi dinamik olarak dağıtmalı:
+
+*   **Ask (Sohbet) Modunda:** History (Geçmiş) ve Knowledge (Bilgi Tabanı) çok önemlidir. Aktif dosya kodu daha az önemlidir. Allocator bütçenin %60'ını History'ye, %10'unu Active File'a verebilir.
+*   **Code Modunda:** Active File (Aktif Dosya) ve Related Files (İlgili Dosyalar) hayati önem taşır. Bütçenin %70'i koda, %20'si History'ye ayrılır.
+*   **Debug Modunda:** Terminal Output (Hata Çıktısı) ve Active File önceliklidir. 
+
+### 3. Kullanıcıya Sahiplik Vermek (UI Entegrasyonu)
+Bu yapı kapalı kapılar ardında kalmamalı. `Settings -> Models` veya `Settings -> Profiles` altında kullanıcıya şu ayarları açmalıyız:
+- **Context Allocation Strategy:** `Auto (Task Based)`, `Prefer History`, `Prefer Codebase`, `Custom`
+- Eğer `Custom` seçerse, kullanıcı slider'lar ile bütçeyi kendi belirleyebilmeli (Örn: "Geçmişe en fazla 8K token ayır, Koda 16K ayır").
+
+### Peki KV Cache (Yavaşlama) Sorununu Dinamik Yapıda Nasıl Çözeceğiz?
+Dinamik bütçe kullanırsak "Mesaj boyutları sürekli değişecek, KV Cache yine patlayacak" diye düşünebilirsin. Ancak bunun RAG ve Local LLM dünyasında çok şık bir çözümü var: **Prompt Reordering (Prefix Caching).**
+
+LLM motorları (MLX, Llama.cpp) promptları baştan sona doğru okur ve önbelleğe alır. Eğer promptun başı aynı kalır da sonu değişirse, sadece değişen son kısmı hesaplar!
+Bizim önceki hatamız, sürekli değişen *Aktif Dosya* içeriğini sistem promptunun içine (en başa) koymamızdı. Aktif dosyada bir harf silinince, model "Promptun başı değişti, her şeyi baştan hesaplayayım" diyordu.
+
+Dinamik bütçeye geçtiğimizde veri sırasını şöyle yapacağız:
+1. `[Sistem Kuralları & Profil]` (En statik - Asla değişmez)
+2. `[Knowledge Base]` (Çok nadir değişir)
+3. `[Chat History]` (Sadece yeni mesaj eklendikçe uzar, eskiler sabittir)
+4. `[Active File]` (Sürekli değişir - **En sona koyuyoruz!**)
+5. `[User Prompt]` (Her seferinde yeni)
+
+Bu sırayla gönderdiğimizde, Allocator dosyayı ne kadar kırparsa kırpsın, model ilk 3 adımı (belki de 15.000 tokeni) hafızasından milisaniyeler içinde çağıracak ve sadece aktif dosyayı + senin sorunu işleyecek!
+
+### Özet ve Aksiyon
+Fikrine bayıldım. Bu mimari bizi standart bir editörden alıp, gerçek bir yapay zeka işletim sistemi katmanına taşır. 
+
+Eğer istersen:
+1. Az önce yaptığımız şu anki yapıyı çalışır durumuyla test edip sistemin genel stabilizasyonunu onaylayalım.
+2. Ardından UI'da "Context Manager" ayarlarını tasarlamaya ve senin çizdiğin bu otonom `Budget Manager / Context Allocator` mimarisini Rust backend'ine inşa etmeye başlayalım.
+
+Ne dersin, yol haritamız bu olsun mu?

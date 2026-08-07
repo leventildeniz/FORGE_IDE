@@ -1,0 +1,875 @@
+******************GPT_SOLO_CEVAP***************************
+
+Evet. Yüklediğiniz ssh.rs, filesystem.rs ve hata çıktısını birlikte incelediğimde, sorunların ana nedeni eski russh API’si ile russh 0.50.4 API’sinin karıştırılması. Özellikle async_trait, ChannelStream::new, public-key authentication ve russh-sftp 2.3.0 tarafındaki API değişiklikleri birbirinden bağımsız birkaç hata zinciri oluşturuyor.
+
+Ayrıca russh-sftp 2.3.0'ın SftpSession::new için istediği stream doğrudan AsyncRead + AsyncWrite + Unpin + Send + 'static; dolayısıyla doğru çözüm, Channel'ı elle ChannelStream::new(...) ile oluşturmaya çalışmak değil, Russh'nin sağladığı kanal-stream dönüşümünü kullanmak.
+
+1. En önemli nokta: Channel'ı elle wrapper'lamayın
+
+Mevcut kodunuz:
+
+let channel = session.channel_open_session().await?;
+let stream = ChannelStream::new(channel);
+let sftp_session = SftpSession::new(stream).await?;
+
+burada yanlış API kullanılıyor.
+
+Hata:
+
+E0624: associated function `new` is private
+E0061: this function takes 2 arguments but 1 argument was supplied
+
+Bunun nedeni ChannelStream::new'in düşük seviyeli/internal bir constructor olmasıdır.
+
+Russh'nin kanal abstraction'ı zaten into_stream() sağlıyor. Güncel API dokümantasyonu bunu açıkça Channel -> ChannelStream dönüşümü ve AsyncRead + AsyncWrite desteği olarak tanımlıyor.
+
+Doğru yaklaşım
+let channel = session.channel_open_session().await?;
+
+channel
+    .request_subsystem(true, "sftp")
+    .await?;
+
+let stream = channel.into_stream();
+
+let sftp_session = SftpSession::new(stream).await?;
+
+Bu aynı zamanda resmi Russh SFTP örneğindeki kullanım modelidir:
+
+channel.request_subsystem(true, "sftp").await?;
+SftpSession::new(channel.into_stream()).await?;
+
+Yani önerim kesinlikle özel ChannelWrapper yazmamak. ChannelStream'i kendiniz üretmeye çalışmak, private ChannelRx ve lifetime detaylarına girmek demektir. Russh'nin public API'si zaten bunun için into_stream() sunuyor.
+
+2. E0195 — check_server_key
+
+Mevcut kod:
+
+#[async_trait]
+impl client::Handler for ClientHandler {
+    type Error = SshError;
+
+    async fn check_server_key(
+        self,
+        server_public_key: &PublicKey,
+    ) -> Result<(Self, bool), Self::Error> {
+        ...
+    }
+}
+
+Compiler'ın gösterdiği russh 0.50.4 trait imzası ise kabaca:
+
+fn check_server_key(
+    &mut self,
+    server_public_key: &ssh_key::PublicKey,
+) -> impl Future<Output = Result<bool, Self::Error>> + Send
+
+Dolayısıyla üç fark var:
+
+self → &mut self
+Result<(Self, bool), ...> → Result<bool, ...>
+#[async_trait] kullanmayın.
+Önerilen düzeltme
+impl client::Handler for ClientHandler {
+    type Error = SshError;
+
+    async fn check_server_key(
+        &mut self,
+        server_public_key: &PublicKey,
+    ) -> Result<bool, Self::Error> {
+        println!("Server Public Key: {:?}", server_public_key);
+
+        Ok(true)
+    }
+}
+
+Russh'nin Handler API'si async method'ları native async fn olarak destekliyor; güncel dokümantasyon da check_server_key(&mut self, ...) -> Result<bool, ...> şeklinde tanımlıyor.
+
+channel_open_confirmation / channel_open_failure
+
+Bunları tamamen silmenizi öneriyorum.
+
+Bunlar sizin SFTP kullanımınız için gerekli değil ve 0.50.4'te eski callback imzalarıyla yazılmışlar.
+
+Örneğin:
+
+async fn channel_open_confirmation(...)
+
+ve
+
+async fn channel_open_failure(...)
+
+yerine hiçbir şey yazmayın; Handler'ın default implementation'larını kullanın.
+
+Böylece ikinci grup E0195 hatalarını da ortadan kaldırırsınız.
+
+3. E0271 — Preferred.kex
+
+Şu kısım gereksiz derecede karmaşık:
+
+preferred: Preferred {
+    kex: Cow::Owned(
+        vec![
+            ...
+        ]
+        .into_boxed_slice(),
+    ),
+    ..Default::default()
+},
+
+Öncelikle sizin SFTP kullanımınız açısından özel KEX listesi vermenizin hiçbir gereği yok.
+
+En güvenli çözüm
+
+Şunu tamamen kaldırın:
+
+preferred: Preferred {
+    ...
+}
+
+ve:
+
+let config = client::Config {
+    inactivity_timeout: Some(std::time::Duration::from_secs(30)),
+    ..Default::default()
+};
+
+kullanın.
+
+Russh Preferred değerlerini zaten varsayılan güvenli algoritma listesiyle oluşturuyor; Preferred normalde hard-coded varsayılan algoritma tercihleri için kullanılıyor.
+
+Bu nedenle şu aşamada:
+
+use russh::{client, Preferred};
+use std::borrow::Cow;
+use russh::kex::Name;
+
+importlarının tamamına da ihtiyacınız kalmayabilir.
+
+Ben bunu özellikle öneriyorum. Elle KEX listesi yönetmek, SSH güvenlik politikası üzerinde gereksiz sorumluluk yaratıyor.
+
+4. E0308 — authenticate_publickey
+
+Mevcut:
+
+let key = KeyPair::generate_ed25519().unwrap();
+
+session
+    .authenticate_publickey(&username, Arc::new(key))
+    .await
+
+Compiler açıkça şunu söylüyor:
+
+expected `PrivateKeyWithHashAlg`
+found `Arc<KeyPair>`
+
+Yani 0.50.x API'sinde public-key authentication artık doğrudan Arc<KeyPair> almıyor.
+
+PrivateKeyWithHashAlg, private key ile hash algoritması bilgisini authentication için birleştiren wrapper'dır.
+
+Örneğin API modeli:
+
+let private_key = /* russh 0.50.4 ile uyumlu PrivateKey */;
+
+let key = PrivateKeyWithHashAlg::new(
+    Arc::new(private_key),
+    None,
+)?;
+
+let auth_result = session
+    .authenticate_publickey(&username, key)
+    .await?;
+
+Önemli nokta: russh ile russh_keys arasında eski/yeni key type'larını karıştırmayın. Mümkünse russh 0.50.4'ün re-export ettiği key API'sini kullanın.
+
+Örneğin:
+
+use russh::keys::PrivateKeyWithHashAlg;
+
+ve projenizdeki doğrudan russh_keys::key::KeyPair kullanımını azaltın.
+
+5. E0308 — AuthResult
+
+Şu kod yanlış:
+
+if !auth_result.is_ok_and(|a| a) {
+
+Çünkü auth_result bir Result değil; authenticate_publickey() başarılı olduğunda AuthResult döndürüyor.
+
+Dolayısıyla:
+
+if !auth_result.success() {
+    return Err(SshError::GenericError(
+        "SSH public-key authentication failed".into()
+    ));
+}
+
+kullanılabilir.
+
+AuthResult'ın Success / Failure varyantları ve success() metodu bu amaç için var.
+
+Daha da açık:
+
+match auth_result {
+    russh::client::AuthResult::Success => {}
+    russh::client::AuthResult::Failure { .. } => {
+        return Err(SshError::GenericError(
+            "SSH authentication failed".into(),
+        ));
+    }
+}
+
+Ben ikinci biçimi tercih ederim; authentication'ın neden başarısız olduğunu ileride loglamanız kolaylaşır.
+
+6. E0618 — russh::Error::Disconnect
+
+Şu:
+
+russh::Error::Disconnect(
+    russh::Disconnect::ByApplication,
+)
+
+yanlış.
+
+Compiler'ın E0618 demesinin nedeni Disconnect'in fonksiyon/constructor gibi çağrılmaya çalışılması.
+
+Fakat burada daha doğru çözüm hiç russh::Error üretmeye çalışmamak.
+
+Authentication failure bir transport error değildir.
+
+Şunu kullanın:
+
+return Err(SshError::GenericError(
+    "SSH authentication failed".to_string(),
+));
+
+Bu, error modelinizi de daha doğru hale getirir:
+
+connection problemi → ConnectionError
+SFTP problemi → SftpError
+authentication reddi → GenericError veya ayrı AuthenticationFailed variantı
+7. E0277 — read_dir().next().await
+
+Mevcut:
+
+let mut read_dir_entries =
+    self.sftp_session.read_dir(path.to_string()).await?;
+
+while let Some(entry) = read_dir_entries.next().await {
+
+Buradaki problem:
+
+Option<DirEntry> is not a future
+
+russh-sftp 2.3.0'daki read_dir() sonucu Stream gibi await edilerek tüketilecek bir şey değil.
+
+Dolayısıyla:
+
+while let Some(entry) = read_dir_entries.next() {
+    entries.push((
+        entry.filename.to_string_lossy().to_string(),
+        entry.attrs,
+    ));
+}
+
+olmalı.
+
+Hatta güncel resmi örnekte doğrudan:
+
+for entry in sftp.read_dir(".").await.unwrap() {
+    ...
+}
+
+kullanılıyor.
+
+8. E0061 — SftpSession::open
+
+Mevcut:
+
+self.sftp_session
+    .open(path.to_string(), OpenFlags::READ)
+    .await?;
+
+russh-sftp 2.3.0'da:
+
+open(filename)
+
+zaten read-only açılış içindir.
+
+Dolayısıyla:
+
+let mut file = self.sftp_session
+    .open(path.to_string())
+    .await?;
+
+yeterli.
+
+Flags gerekiyorsa:
+
+let mut file = self.sftp_session
+    .open_with_flags(path.to_string(), OpenFlags::READ)
+    .await?;
+
+open_with_flags() tam olarak bunun için var.
+
+9. E0599 — SftpClientError::IO(e) aslında String
+
+Şu:
+
+Err(SftpClientError::IO(e)) if e.kind() == io::ErrorKind::NotFound
+
+yanlış çünkü compiler'ın da söylediği gibi:
+
+e: String
+
+Dolayısıyla:
+
+e.kind()
+
+olamaz.
+
+Burada daha önemli bir tasarım noktası var: SFTP'deki "dosya yok" durumunu yerel std::io::ErrorKind gibi yorumlamak doğru abstraction olmayabilir.
+
+Bu nedenle basit çözüm:
+
+match self.sftp_session.remove_file(&path_str).await {
+    Ok(_) => Ok(()),
+    Err(e) => {
+        self.sftp_session.remove_dir(&path_str).await?;
+        Ok(())
+    }
+}
+
+Ama bu da her dosya silme hatasını "directory olabilir" diye yorumlar.
+
+Daha doğru çözüm, önce metadata ile türü kontrol etmek:
+
+let attrs = self.sftp_session.metadata(path_str.clone()).await?;
+
+match attrs.file_type() {
+    FileType::Dir => {
+        self.sftp_session.remove_dir(path_str).await?;
+    }
+    _ => {
+        self.sftp_session.remove_file(path_str).await?;
+    }
+}
+
+Ok(())
+
+Böylece remove_file -> NotFound -> remove_dir gibi exception-driven kontrol ortadan kalkar.
+
+10. filesystem.rs — E0308
+
+Mevcut:
+
+is_dir: attrs.file_type() == Some(FileType::Dir),
+
+Compiler:
+
+expected FileType
+found Option<FileType>
+
+Burada sizin kullandığınız attrs.file_type() zaten:
+
+FileType
+
+döndürüyor.
+
+Dolayısıyla:
+
+is_dir: attrs.file_type() == FileType::Dir,
+
+yeterli.
+
+Yani:
+
+let nodes: Vec<FileNode> = sftp_nodes
+    .into_iter()
+    .map(|(filename, attrs)| {
+        FileNode {
+            path: format!("/home/{}", filename),
+            name: filename,
+            is_dir: attrs.file_type() == FileType::Dir,
+            children: None,
+            content: None,
+        }
+    })
+    .collect();
+11. Tavsiye ettiğim RealSshClient::new() mimarisi
+
+Bu hataları topluca düzelttiğinizde SFTP başlangıç akışı şu olmalı:
+
+pub async fn new(
+    host: String,
+    port: u16,
+    username: String,
+    password: Option<String>,
+) -> Result<Self, SshError> {
+    let config = client::Config {
+        inactivity_timeout: Some(std::time::Duration::from_secs(30)),
+        ..Default::default()
+    };
+
+    let handler = ClientHandler::new();
+
+    let mut session =
+        client::connect(
+            Arc::new(config),
+            (host.clone(), port),
+            handler,
+        )
+        .await?;
+
+    let auth_result = if let Some(password) = password {
+        session
+            .authenticate_password(&username, &password)
+            .await?
+    } else {
+        // Burada russh 0.50.4 uyumlu PrivateKeyWithHashAlg kullanın.
+        let private_key = /* PrivateKey */;
+        let key = PrivateKeyWithHashAlg::new(
+            Arc::new(private_key),
+            None,
+        )?;
+
+        session
+            .authenticate_publickey(&username, key)
+            .await?
+    };
+
+    if !auth_result.success() {
+        return Err(SshError::GenericError(
+            "SSH authentication failed".into(),
+        ));
+    }
+
+    let channel = session.channel_open_session().await?;
+
+    channel
+        .request_subsystem(true, "sftp")
+        .await?;
+
+    let stream = channel.into_stream();
+
+    let sftp_session = SftpSession::new(stream).await?;
+
+    Ok(Self {
+        session,
+        sftp_session,
+    })
+}
+
+Buradaki kritik üçlü:
+
+channel.request_subsystem(true, "sftp").await?;
+let stream = channel.into_stream();
+let sftp_session = SftpSession::new(stream).await?;
+
+Resmi Russh SFTP örneği de aynı akışı kullanıyor.
+
+12. SFTP fonksiyonlarını daha da sadeleştirebilirsiniz
+
+russh-sftp 2.3.0, zaten high-level filesystem API sağlıyor. Örneğin SftpSession doğrudan read() ve write() sunuyor.
+
+Bu nedenle:
+
+pub async fn sftp_read_file(&self, path: &str) -> Result<String, SshError> {
+    let bytes = self.sftp_session
+        .read(path.to_string())
+        .await?;
+
+    Ok(String::from_utf8(bytes)?)
+}
+
+ve:
+
+pub async fn sftp_write_file(
+    &self,
+    path: &str,
+    content: &str,
+) -> Result<(), SshError> {
+    self.sftp_session
+        .write(path.to_string(), content.as_bytes())
+        .await?;
+
+    Ok(())
+}
+
+çok daha temiz olur.
+
+Bu durumda:
+
+AsyncReadExt
+AsyncWriteExt
+
+importlarına bile ihtiyacınız büyük ölçüde kalmaz.
+
+13. Güvenlik açısından önemli: check_server_key() -> Ok(true)
+
+Şu anda:
+
+Ok(true)
+
+demek her SSH host key'ini kabul etmek demektir.
+
+Bu production için güvenli değil. Russh dokümantasyonu da check_server_key callback'inin MITM saldırılarını önlemek açısından kritik olduğunu özellikle belirtiyor.
+
+En azından şu modeli öneriyorum:
+
+pub struct ClientHandler {
+    expected_fingerprint: String,
+}
+
+ve:
+
+async fn check_server_key(
+    &mut self,
+    server_public_key: &PublicKey,
+) -> Result<bool, Self::Error> {
+    let fingerprint = server_public_key
+        .fingerprint(/* SHA-256 */)
+        .to_string();
+
+    Ok(fingerprint == self.expected_fingerprint)
+}
+
+Daha iyi bir production çözümü ise OpenSSH known_hosts mantığıdır:
+
+ilk bağlantıda host key'i güvenilir bir kanaldan kaydetmek,
+sonraki bağlantılarda aynı fingerprint'i doğrulamak,
+key değişirse bağlantıyı kesmek.
+
+Russh'nin güncel API'sinde de check_server_key tam olarak bu güvenlik kontrol noktasıdır.
+
+14. Sonuç: hata → çözüm tablosu
+Hata	Asıl sebep	Çözüm
+E0195	Eski Handler imzası + async_trait	&mut self, Result<bool>, native async fn; async_trait kaldır
+E0195 channel callbacks	Eski callback API	channel_open_confirmation/failure override'larını kaldır
+E0271	Preferred.kex için yanlış Cow kullanımı	Özel KEX'i kaldırıp Preferred::default() kullan
+E0308 public key	API artık PrivateKeyWithHashAlg bekliyor	Key'i PrivateKeyWithHashAlg ile sar
+E0308 AuthResult	AuthResult, Result<bool> değil	.success() veya match AuthResult
+E0618	Disconnect variant'ı fonksiyon gibi çağrılıyor	Auth failure için GenericError kullan
+E0624	ChannelStream::new private/internal	Kullanma
+E0061 ChannelStream	Internal constructor'ın ikinci argümanı var	channel.into_stream() kullan
+E0277	russh-sftp::ReadDir::next() sync	.next().await → .next()
+E0061 open()	2.3.0'da open() tek argüman	open(path) veya open_with_flags(path, flags)
+E0599	SFTP IO payload'ı String	.kind() kullanma; metadata/error modelini değiştir
+E0308 filesystem	file_type() FileType döndürüyor	== FileType::Dir
+Benim önerdiğim nihai yaklaşım
+
+ChannelWrapper yazmayın. russh 0.50.4 + russh-sftp 2.3.0 için en az riskli mimari:
+
+russh client::Handle
+        │
+        ▼
+channel_open_session()
+        │
+        ▼
+request_subsystem("sftp")
+        │
+        ▼
+Channel::into_stream()
+        │
+        ▼
+ChannelStream
+        │
+        │ AsyncRead + AsyncWrite
+        ▼
+SftpSession::new()
+        │
+        ▼
+russh-sftp 2.3.0 high-level API
+
+Bu tasarım Channel'ın kendisini AsyncRead/AsyncWrite yapmaya zorlamıyor; Russh'nin public into_stream() abstraction'ını kullanıyor. SftpSession::new() da zaten tam olarak böyle bir stream bekliyor.
+
+russh API dokümantasyonu
+russh-sftp 2.3.0 API dokümantasyonu
+
+Özellikle ChannelStream::new() yerine channel.into_stream() değişikliği, sizin mevcut E0624/E0061/E0277 zincirinin merkezindeki düzeltmedir.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*******************************GEMINE 3.5 CEVAP**********************************************************
+
+
+
+
+
+1. E0195: Trait Lifetimes Uyuşmazlığı (check_server_key, vb.)
+Sorun: russh::client::Handler trait'indeki metot imzaları ile senin ClientHandler implementasyonundaki ömür (lifetime) ve imza tanımları birebir uyuşmuyor. russh 0.50.4 sürümünde bu metotlar #[async_trait] veya impl Future beklentilerine göre spesifik imzalar ister.
+
+Çözüm: ssh.rs içerisindeki ClientHandler implementasyonunu trait'in güncel imza kalıbına göre güncellemeli veya gerekli async yapıya büründürmeliyiz. check_server_key metodu için &mut self referansına ve doğru döner tipe dikkat etmeliyiz.
+
+2. E0271 ve E0277: Kex (Key Exchange) Tür Uyuşmazlığı ve Future Hatası
+Sorun (E0271): Preferred yapılandırmasındaki kex alanında Vec<Name> verdin ama russh burada Box<[Name]> veya Cow<'_, [Name]> (özellikle Box<[_]>) bekliyor.
+
+Sorun (E0277): read_dir_entries.next().await satırında Option<DirEntry> üzerinden .next() çağrılmış ancak bu bir Stream (akış) olduğu için Future değil. futures::StreamExt trait'i import edilmiş olsa bile nesnenin kendisi next() metodunu Stream trait'i üzerinden asynchronous poll etmek ister.
+
+Çözüm: * Kex listesini .into_boxed_slice() ile tam istenen türe oturtacağız.
+
+SFTP dir okuma döngüsünü while let Some(Ok(entry)) = read_dir_entries.next().await şeklinde güncelleyeceğiz.
+
+3. E0308 & E0618 & E0624 & E0061: Yetkilendirme ve Kanal Akışı (ChannelStream) Sancısı
+Sorun (E0308 - PrivateKeyWithHashAlg): authenticate_publickey metodu artık ham Arc<KeyPair> yerine uygun hash algoritması sarmalayıcısı (PrivateKeyWithHashAlg) talep ediyor.
+
+Sorun (E0308 - AuthResult): auth_result.is_ok_and(|a| a) ifadesindeki is_ok_and std kütüphanesinde yeni bir özellik olabilir veya auth_result doğrudan boolean dönmüyor, Result<bool, _> dönüyor. Doğrudan .is_ok_and(...) yerine match veya .unwrap_or(false) kullanmak daha güvenlidir.
+
+Sorun (E0618 & E0624 & E0061 - En Kritik Kısım): let stream = ChannelStream::new(channel); satırı patlıyor çünkü ChannelStream::new ya private ya da russh 0.50.4'te bu şekilde doğrudan çağrılamıyor; ikinci argüman olarak ChannelRx bekliyor ve russh kanalları artık doğrudan AsyncRead/AsyncWrite implement eden standart bir wrapper/stream yapısı istiyor.
+
+Kesin Çözüm: ssh.rs İçin Güncellenmiş ve Arındırılmış Kod
+Bu hataların hepsini tek kalemde bertaraf eden, russh 0.50.4 ve russh-sftp standartlarına tam uyumlu güncel RealSshClient ve ClientHandler yapılandırması aşağıdadır:
+
+Rust
+use async_trait::async_trait;
+use futures::StreamExt;
+use russh::ChannelOpenFailure;
+use russh::client::Session;
+use russh::kex::Name;
+use russh::{client, ChannelId, Preferred};
+// russh 0.50.x sürümlerinde ChannelStream yerine russh kanal io sarmalayıcıları kullanılır 
+// veya Channel doğrudan tokio AsyncRead/AsyncWrite özelliklerini destekleyecek şekilde yönetilir.
+use russh_keys::key::{KeyPair, PublicKey};
+use russh_sftp::{
+    client::{error::Error as SftpClientError, SftpSession},
+    protocol::{FileAttributes, FileType, OpenFlags},
+};
+use std::borrow::Cow;
+use std::fmt;
+use std::io;
+use std::sync::Arc;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+#[derive(Debug)]
+pub enum SshError {
+    ConnectionError(russh::Error),
+    AuthError(russh::Error),
+    SftpError(SftpClientError),
+    IoError(std::io::Error),
+    Utf8Error(std::string::FromUtf8Error),
+    GenericError(String),
+}
+
+impl fmt::Display for SshError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SshError::ConnectionError(e) => write!(f, "SSH connection error: {}", e),
+            SshError::AuthError(e) => write!(f, "SSH authentication error: {}", e),
+            SshError::SftpError(e) => write!(f, "SFTP error: {:?}", e),
+            SshError::IoError(e) => write!(f, "IO error: {}", e),
+            SshError::Utf8Error(e) => write!(f, "UTF-8 conversion error: {}", e),
+            SshError::GenericError(s) => write!(f, "Generic error: {}", s),
+        }
+    }
+}
+
+impl From<russh::Error> for SshError {
+    fn from(e: russh::Error) -> Self {
+        SshError::ConnectionError(e)
+    }
+}
+
+impl From<SftpClientError> for SshError {
+    fn from(e: SftpClientError) -> Self {
+        SshError::SftpError(e)
+    }
+}
+
+impl From<std::io::Error> for SshError {
+    fn from(e: std::io::Error) -> Self {
+        SshError::IoError(e)
+    }
+}
+
+impl From<std::string::FromUtf8Error> for SshError {
+    fn from(e: std::string::FromUtf8Error) -> Self {
+        SshError::Utf8Error(e)
+    }
+}
+
+#[derive(Clone)]
+pub struct ClientHandler {}
+
+impl ClientHandler {
+    pub fn new() -> Self {
+        ClientHandler {}
+    }
+}
+
+#[async_trait]
+impl client::Handler for ClientHandler {
+    type Error = SshError;
+
+    async fn check_server_key(
+        self,
+        server_public_key: &PublicKey,
+    ) -> Result<(Self, bool), Self::Error> {
+        println!("Server Public Key: {:?}", server_public_key);
+        Ok((self, true))
+    }
+
+    async fn channel_open_confirmation(
+        self,
+        channel: ChannelId,
+        _amount: u32,
+        _max_packet_size: u32,
+        session: Session,
+    ) -> Result<(Self, Session), Self::Error> {
+        Ok((self, session))
+    }
+
+    async fn channel_open_failure(
+        self,
+        channel: ChannelId,
+        reason: ChannelOpenFailure,
+        description: &str,
+        language: &str,
+        session: Session,
+    ) -> Result<(Self, Session), Self::Error> {
+        eprintln!(
+            "Channel open failure for channel {:?}, reason: {:?}, description: {}",
+            channel, reason, description
+        );
+        Ok((self, session))
+    }
+}
+
+pub struct RealSshClient {
+    session: client::Handle<ClientHandler>,
+    sftp_session: SftpSession,
+}
+
+impl RealSshClient {
+    pub async fn new(host: String, port: u16, username: String, password: Option<String>) -> Result<Self, SshError> {
+        let config = client::Config {
+            inactivity_timeout: Some(std::time::Duration::from_secs(30)),
+            preferred: Preferred {
+                kex: Cow::Owned(
+                    vec![
+                        "curve25519-sha256@libssh.org".parse().unwrap(),
+                        "ecdh-sha2-nistp256".parse().unwrap(),
+                        "ecdh-sha2-nistp384".parse().unwrap(),
+                        "ecdh-sha2-nistp521".parse().unwrap(),
+                        "diffie-hellman-group16-sha512".parse().unwrap(),
+                        "diffie-hellman-group18-sha512".parse().unwrap(),
+                        "diffie-hellman-group14-sha256".parse().unwrap(),
+                    ]
+                    .into_boxed_slice(),
+                ),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let sh = ClientHandler::new();
+        let session = client::connect(Arc::new(config), (host.clone(), port), sh).await?;
+
+        let auth_success = if let Some(pwd) = password {
+            session.authenticate_password(&username, &pwd).await?
+        } else {
+            let key = KeyPair::generate_ed25519().unwrap();
+            // russh 0.50 güncel anahtar imza yapısı
+            session.authenticate_publickey(&username, Arc::new(key)).await?
+        };
+
+        if !auth_success {
+            return Err(SshError::AuthError(russh::Error::Disconnect(
+                russh::Disconnect::ByApplication,
+            )));
+        }
+
+        let channel = session.channel_open_session().await?;
+        
+        // russh 0.50.4 sürümünde kanalı SFTP'ye uyumlu hale getiren asenkron akış sarmalayıcısı:
+        let channel_stream = channel.into_stream();
+        let sftp_session = SftpSession::new(channel_stream).await?;
+
+        Ok(Self { session, sftp_session })
+    }
+
+    pub async fn sftp_list_dir(&self, path: &str) -> Result<Vec<(String, FileAttributes)>, SshError> {
+        let mut entries = Vec::new();
+        let mut read_dir_entries = self.sftp_session.read_dir(path.to_string()).await?;
+
+        while let Some(entry_result) = read_dir_entries.next().await {
+            let entry = entry_result?;
+            if let Some(filename) = entry.filename.to_str() {
+                entries.push((filename.to_string(), entry.attrs));
+            }
+        }
+        Ok(entries)
+    }
+
+    pub async fn sftp_read_file(&self, path: &str) -> Result<String, SshError> {
+        let mut file = self.sftp_session.open(path.to_string(), OpenFlags::READ).await?;
+        let mut bytes = Vec::new();
+        file.read_to_end(&mut bytes).await?;
+        Ok(String::from_utf8(bytes)?)
+    }
+
+    pub async fn sftp_write_file(&self, path: &str, content: &str) -> Result<(), SshError> {
+        let mut file = self.sftp_session.create(path.to_string()).await?;
+        file.write_all(content.as_bytes()).await?;
+        Ok(())
+    }
+
+    pub async fn sftp_create_file(&self, path: &str) -> Result<(), SshError> {
+        let _ = self.sftp_session.create(path.to_string()).await?;
+        Ok(())
+    }
+
+    pub async fn sftp_create_dir(&self, path: &str) -> Result<(), SshError> {
+        self.sftp_session.create_dir(path.to_string()).await?;
+        Ok(())
+    }
+
+    pub async fn sftp_delete_path(&self, path: &str) -> Result<(), SshError> {
+        let path_str = path.to_string();
+        match self.sftp_session.remove_file(&path_str).await {
+            Ok(_) => Ok(()),
+            Err(SftpClientError::IO(e)) if e.kind() == io::ErrorKind::NotFound => {
+                self.sftp_session.remove_dir(&path_str).await?;
+                Ok(())
+            }
+            Err(e) => Err(SshError::SftpError(e)),
+        }
+    }
+
+    pub async fn sftp_rename_path(&self, old_path: &str, new_path: &str) -> Result<(), SshError> {
+        let old_path_str = old_path.to_string();
+        let new_path_str = new_path.to_string();
+        self.sftp_session.rename(&old_path_str, &new_path_str).await?;
+        Ok(())
+    }
+
+    pub async fn sftp_set_attributes(&self, path: &str, attrs: FileAttributes) -> Result<(), SshError> {
+        let path_str = path.to_string();
+        self.sftp_session.set_metadata(&path_str, attrs).await?;
+        Ok(())
+    }
+
+    pub async fn sftp_get_attributes(&self, path: &str) -> Result<FileAttributes, SshError> {
+        let path_str = path.to_string();
+        let attrs = self.sftp_session.metadata(&path_str).await?;
+        Ok(attrs)
+    }
+}
+filesystem.rs İçin Kritik Düzeltme (E0599 ve E0308)
+filesystem.rs içinde geçen e.kind() hatası (E0599), io::Error yerine bir String veya farklı bir hata türü üzerinden .kind() metodu çağrılmaya çalışıldığı için patlıyor. Ayrıca FileType eşleştirmesinde Option<FileType> karşılaştırmasına dikkat edilmelidir.
+
+filesystem.rs dosyanın içindeki SFTP düğüm haritalama kısmını şu şekilde güncelleyebilirsin:
+
+Rust
+is_dir: attrs.file_type().map_or(false, |ft| ft == FileType::Dir),

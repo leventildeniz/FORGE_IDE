@@ -1,0 +1,6 @@
+# Ekrana mesaj yazdır
+print("Merhaba Forge IDE!")
+
+# 1'den 10'a kadar say
+for i in range(1, 11):
+    print(i)
