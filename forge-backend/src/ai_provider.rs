@@ -1,6 +1,5 @@
 use futures_util::StreamExt;
 use reqwest::Client;
-use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use tokio::sync::mpsc::UnboundedSender;
 use tokio_util::sync::CancellationToken;
@@ -8,39 +7,7 @@ use warp::ws::Message;
 
 use crate::messages::BackendResponse;
 
-#[derive(Serialize)]
-struct ChatCompletionRequest {
-    model: String,
-    messages: Vec<Value>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    temperature: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    top_p: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    max_tokens: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    stop: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    reasoning_effort: Option<String>,
-    stream: bool,
-}
-
-#[derive(Deserialize)]
-struct ChatCompletionChunk {
-    choices: Vec<ChunkChoice>,
-}
-
-#[derive(Deserialize)]
-struct ChunkChoice {
-    delta: ChunkDelta,
-}
-
-#[derive(Deserialize)]
-struct ChunkDelta {
-    content: Option<String>,
-    reasoning_content: Option<String>,
-}
-
+// The models/structs here are handled by serde directly or not needed for chunks
 fn search_codebase(path: &std::path::Path, query: &str, results: &mut Vec<String>) {
     if results.len() >= 50 {
         return;
@@ -250,7 +217,9 @@ pub async fn handle_ai_chat_stream(
                     let args: Vec<&str> = args_val.iter().filter_map(|v| v.as_str()).collect();
                     crate::debug_log!(
                         "Backend: Starting MCP Server: {} ({} {:?})",
-                        name, command, args
+                        name,
+                        command,
+                        args
                     );
 
                     let client = crate::mcp_client::McpClient::new();
@@ -287,7 +256,8 @@ pub async fn handle_ai_chat_stream(
                                 Err(e) => {
                                     crate::debug_log!(
                                         "Backend: MCP '{}' tools/list waiting... (Error: {})",
-                                        name, e
+                                        name,
+                                        e
                                     );
                                 }
                             }
@@ -1029,8 +999,8 @@ MANDATORY WORKFLOW:
                     );
 
                     // Execute filesystem action
-                    let mut result_text = String::new();
-                    let mut ui_feedback = String::new(); // What the user sees in the chat UI
+                    let result_text;
+                    let mut ui_feedback; // What the user sees in the chat UI
 
                     let proj_root = context
                         .as_object()
@@ -1379,15 +1349,19 @@ MANDATORY WORKFLOW:
                         let parts: Vec<&str> = arg.splitn(2, ' ').collect();
                         if parts.is_empty() {
                             result_text = "Error: Invalid WEB command. Expected 'search <query>' or 'fetch <url>'".to_string();
-                            ui_feedback =
-                                "> ❌ **Web Agent Error:** Invalid syntax.\n\n".to_string();
+                            send_chunk(
+                                "> ❌ **Web Agent Error:** Invalid syntax.\n\n".to_string(),
+                                false,
+                                &request_id,
+                                &client_sender,
+                            );
                         } else {
                             let action = parts[0].trim();
                             let target = if parts.len() > 1 { parts[1].trim() } else { "" };
 
                             if action == "search" {
                                 ui_feedback = format!("> 🌐 **Web Search:** `{}`\n\n", target);
-                                send_chunk(ui_feedback.clone(), false, &request_id, &client_sender);
+                                send_chunk(ui_feedback, false, &request_id, &client_sender);
 
                                 match crate::knowledge::search_web(target).await {
                                     Ok(res) => {
@@ -1402,7 +1376,7 @@ MANDATORY WORKFLOW:
                                 }
                             } else if action == "fetch" {
                                 ui_feedback = format!("> 🌐 **Web Fetch:** `{}`\n\n", target);
-                                send_chunk(ui_feedback.clone(), false, &request_id, &client_sender);
+                                send_chunk(ui_feedback, false, &request_id, &client_sender);
 
                                 match crate::knowledge::scrape_url(target).await {
                                     Ok(res) => {
@@ -1425,20 +1399,18 @@ MANDATORY WORKFLOW:
                                 }
                             } else {
                                 result_text = format!("Error: Unknown WEB action '{}'", action);
-                                ui_feedback =
-                                    format!("> ❌ **Unknown Web Action:** `{}`\n\n", action);
                             }
                         }
-                        // Note: We already sent the ui_feedback inside the blocks to give early feedback,
-                        // so we can clear it here to prevent double sending.
-                        ui_feedback = String::new();
+                        ui_feedback = String::new(); // We already sent the ui_feedback inside the blocks to give early feedback
                     } else {
                         result_text = format!("Unknown command: {}", cmd);
                         ui_feedback = format!("> ❓ **Unknown command:** `{}`\n", cmd);
                     }
 
                     // Send the UI Feedback immediately to the chat window
-                    send_chunk(ui_feedback, false, &request_id, &client_sender);
+                    if !ui_feedback.is_empty() {
+                        send_chunk(ui_feedback, false, &request_id, &client_sender);
+                    }
 
                     // Append the accumulated assistant response so far
                     loop_messages

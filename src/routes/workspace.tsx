@@ -45,9 +45,7 @@ function Workspace() {
     saveActive,
     initializeBackendConnection, // Get the new action from store
   } = useIDEStore();
-
-  // DIAGNOSTIC LOG: Log workspaceView and explorerOpen on every render of Workspace
-  console.log("Workspace Render: workspaceView=", workspaceView, "explorerOpen=", explorerOpen);
+const isAppLocked = useIDEStore((s) => s.isAppLocked);
 
   useEffect(() => {
     initializeBackendConnection(); // Initialize backend connection on component mount

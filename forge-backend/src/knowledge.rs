@@ -96,7 +96,7 @@ pub async fn scrape_url(url: &str) -> Result<String, String> {
     let document = Html::parse_document(&html);
 
     // Create a new string to hold the cleaned HTML
-    let mut cleaned_html = String::new();
+    let cleaned_html;
 
     // Try to find the main content area first. Fallback to body.
     let content_selectors = ["article", "main", ".content", "#content", ".post", "body"];

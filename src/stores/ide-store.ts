@@ -1148,6 +1148,8 @@ export const useIDEStore = create<IDEState>()(
             };
           });
         },
+        explorerOpen: true,
+        aiOpen: true,
         bottomOpen: true,
         bottomTab: "terminal",
         minimap: false,
@@ -2745,6 +2747,9 @@ export const useIDEStore = create<IDEState>()(
         profiles: state.profiles,
         appPasswordHash: state.appPasswordHash,
         isAppLocked: !!state.appPasswordHash, // if there is a password, lock on reload
+        explorerOpen: state.explorerOpen,
+        aiOpen: state.aiOpen,
+        bottomOpen: state.bottomOpen,
       }),
       merge: (persistedState: any, currentState) => {
         // If the persisted state has models, check if it's the old single mock model
