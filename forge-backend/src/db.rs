@@ -219,7 +219,7 @@ pub struct ChatSessionRecord {
 pub fn get_chat_sessions(project_root: &str) -> Result<Vec<ChatSessionRecord>> {
     let conn = Connection::open(get_db_path())?;
     let mut stmt =
-        conn.prepare("SELECT id, title, project_root, updated_at FROM chat_sessions WHERE project_root = ?1 OR project_root = '' ORDER BY updated_at DESC")?;
+        conn.prepare("SELECT id, title, project_root, updated_at FROM chat_sessions WHERE project_root = ?1 ORDER BY updated_at DESC")?;
 
     let iter = stmt.query_map(params![project_root], |row| {
         Ok(ChatSessionRecord {
