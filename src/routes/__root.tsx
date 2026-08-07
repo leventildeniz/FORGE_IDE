@@ -165,16 +165,20 @@ function RootComponent() {
   };
 
   useEffect(() => {
+    // If the app is locked, DO NOT run this auto-redirect logic yet!
+    // It causes race conditions with the router because components are unmounted.
+    if (isAppLocked) return;
+
     console.log("RootComponent useEffect: Initializing backend connection.");
     initializeBackendConnection();
 
     // Backend bağlantısı kurulduktan ve suggested roots alındıktan sonra projectRootPath hala null ise,
     // kullanıcıyı başlangıç sayfasına yönlendir.
-    if (projectRootPath === null && !isAppLocked) {
+    if (projectRootPath === null) {
       console.log("RootComponent useEffect: projectRootPath is null, redirecting to /.");
       navigate({ to: "/" });
     }
-  }, [initializeBackendConnection, projectRootPath, navigate, isAppLocked]); // Bağımlılıkları güncelledik
+  }, [initializeBackendConnection, projectRootPath, navigate, isAppLocked]);
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider delayDuration={200}>
