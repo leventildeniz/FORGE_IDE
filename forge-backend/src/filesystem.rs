@@ -88,7 +88,6 @@ pub fn list_dir_contents<'a>(
                 || file_name == "build"
                 || file_name == ".svelte-kit"
                 || file_name == ".tanstack"
-                || file_name == ".lovable"
                 || file_name == ".expo"
                 || file_name == ".nuxt"
                 || file_name == "coverage"

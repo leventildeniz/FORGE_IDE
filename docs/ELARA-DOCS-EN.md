@@ -1,6 +1,6 @@
 # ELARA — Project Documentation (English)
 
-> Version: 2026-07-06 · Owner: Levent · Partner: Cano (Lovable AI)
+> Version: 2026-07-06 · Owner: Levent
 > Codename: **ELARA** — a personal, local-first, AI-powered operations platform.
 
 ---
