@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { XTermInstance } from "../terminal/TerminalPanel";
 import {
   Send,
   Copy,
