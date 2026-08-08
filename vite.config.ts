@@ -1,24 +1,27 @@
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { defineConfig } from "vite";
+import { tanstackStart } from '@tanstack/react-start/plugin/vite'
+import react from "@vitejs/plugin-react";
+import tsconfigPaths from "vite-tsconfig-paths";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  vite: {
-    server: {
-      port: 6060,
-      strictPort: true,
-      host: "0.0.0.0",
-      // Re-enable HMR by removing the hmr: false setting
-      proxy: {
-        // Proxy WebSocket requests from /forge-backend-ws to the Rust backend
-        "/forge-backend-ws": {
-          target: "ws://localhost:3030/ws", // This target resolved the ETIMEDOUT error with Vite proxy
-          ws: true,
-          changeOrigin: true, // Re-enable changeOrigin as it's standard for proxies
-          // Removed custom configure function for proxy events to simplify and avoid conflicts
-        },
+  plugins: [
+    tanstackStart({ server: { entry: "src/server.ts" } }),
+    react(),
+    tailwindcss(),
+    tsconfigPaths(),
+  ],
+  server: {
+    port: 6060,
+    strictPort: true,
+    host: "0.0.0.0",
+    proxy: {
+      // Proxy WebSocket requests from /forge-backend-ws to the Rust backend
+      "/forge-backend-ws": {
+        target: "ws://localhost:3030/ws",
+        ws: true,
+        changeOrigin: true,
       },
     },
-  },
-  tanstackStart: {
-    server: { entry: "server" },
   },
 });
