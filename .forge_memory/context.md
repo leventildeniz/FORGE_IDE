@@ -9,7 +9,12 @@ Finalize "Forge IDE" v1.0 (a Local-First LLM-powered IDE). Complete Phase 8 (Har
 - **Security ✅:** Implemented a "Master Password" Lock Screen to protect the IDE from local network access. Fixed a router crash related to unauthenticated redirects.
 - **Git Pull ✅:** Implemented robust `git pull` logic in Rust that safely handles untracked files (using auto-stash/pop) and "unborn branch" edge cases.
 - **Production Backend & SystemD ✅:** Replaced noisy `println!` spam with a toggleable `debug_log!` macro (Developer Mode). Configured `forge-backend.service` to run the optimized `--release` binary to fix Vite proxy `EPIPE` timeouts. Added `OOMScoreAdjust=-1000` to prevent the Linux kernel from silently killing the backend during high KV-cache usage.
-- **Data Bleed (Cross-Project Chat) 🟡:** Fixed a severe bug where chat sessions bled across different projects. Added a `project_root` column to the `chat_sessions` SQLite table via automatic migration (`ALTER TABLE`). *Status: Code is deployed, but user must restart the release binary to test if ghost chats are fully isolated.*
+- **UI Performance (Zustand) ✅:** Applied `useShallow` to all `useIDEStore()` hooks globally and memoized heavy calculations (`useMemo` for tree flattening). This prevents catastrophic UI re-renders and freezing when the AI streams tokens in very large projects.
+- **WSL Terminal Spawn Fix ✅:** Fixed a backend panic where spawning a local terminal inside a WSL environment would crash the backend (searching for `wsl.exe` inside Linux). EPIPE crashes due to terminal panics are resolved.
+- **Data Bleed (Cross-Project Chat) ✅:** Fixed a severe bug where chat sessions bled across different projects. Added a `project_root` column to the `chat_sessions` SQLite table via automatic migration (`ALTER TABLE`).
+- **File Explorer Performance ✅:** Expanded the backend directory blacklists (`venv`, `.env`, `logs`, `.tanstack`, `__pycache__`) and replaced heavy `fs::metadata` calls with `entry.file_type()`. This dramatically reduced project load times for large repositories.
+- **AI Iteration & Reasoning Fixes ✅:** Increased tool iteration limit to 30. Fixed a bug where tool execution was prematurely triggered inside `<think>` blocks, causing infinite loops.
+- **Telemetry & Context Fixes ✅:** Resolved an integer underflow ("18 Trillion Tokens") in the Rust telemetry calculation. Fixed "Compact Chat" logic to send only the compacted summary payload to the LLM instead of deleting messages permanently from the database.
 
 **Context**
 - **Architecture:** Rust backend (`forge-backend/`) + React/TypeScript/Zustand frontend (`src/`).
@@ -22,6 +27,7 @@ Finalize "Forge IDE" v1.0 (a Local-First LLM-powered IDE). Complete Phase 8 (Har
 3. **Code Freeze:** Avoid adding new features ("feature creep"). Focus strictly on stability and documentation.
 
 **Pitfalls (Do Not Repeat)**
+- **Zustand UI Freezes (Context Stuffing):** Never use `const { ... } = useStore()` without `useShallow` in components that subscribe to rapidly changing states (like an AI streaming characters). The entire IDE will re-render per character, crashing large projects. Always use `useShallow` explicitly.
 - **SystemD + `cargo run`:** Running `cargo run` inside SystemD causes massive Vite proxy timeouts (`EPIPE`) because the frontend hits the proxy while the backend is still compiling. Always use the compiled binary in `.service` files.
 - **OOM Silent Crashes:** SystemD aggressively kills memory-heavy AI processes without throwing errors (`Deactivated successfully`). Must use `LimitAS=infinity` and `OOMScoreAdjust=-1000`.
 - **Git Pull over Untracked Files:** `git pull` will abort if auto-generated local files (like `.forge/knowledge/context.md`) conflict. Must wrap the pull command in `git stash push --include-untracked` and `git stash pop`.

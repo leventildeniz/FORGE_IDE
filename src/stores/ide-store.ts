@@ -1959,12 +1959,19 @@ export const useIDEStore = create<IDEState>()(
           const currentContextSettings = state.contextSettings;
 
           get().addTelemetryTrace(`AI Stream requested (Model: ${activeModel?.name})`);
+          // Calculate the effective chat history by ignoring everything before the last compaction
+          let effectiveHistory = state.messages;
+          const lastCompactIndex = effectiveHistory.map(m => m.parts.some(p => p.type === 'compact')).lastIndexOf(true);
+          if (lastCompactIndex !== -1) {
+            effectiveHistory = effectiveHistory.slice(lastCompactIndex);
+          }
+
           wsManager.sendRequest({
             type: BackendRequestType.AiChatStream,
             payload: {
               model: activeModel,
               profile: activeProfile,
-              chatHistory: state.messages, // We send state.messages here, which is BEFORE the new user message. The backend appends the new prompt manually.
+              chatHistory: effectiveHistory, // Send only the compacted summary and what comes after it
               prompt: text,
               mcpServers: state.mcpTools.filter((t) => t.isEnabled),
               context: {

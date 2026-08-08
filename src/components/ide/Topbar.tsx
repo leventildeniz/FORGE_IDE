@@ -174,15 +174,21 @@ function ToggleBtn({
 }
 
 function EnvBadge() {
-  const { environments, activeEnvId, setWorkspaceView, setConfigureTab } = useIDEStore(useShallow((state) => ({
+  const { environments, activeEnvId, setWorkspaceView, setConfigureTab, isConnected } = useIDEStore(useShallow((state) => ({
     environments: state.environments,
     activeEnvId: state.activeEnvId,
     setWorkspaceView: state.setWorkspaceView,
     setConfigureTab: state.setConfigureTab,
+    isConnected: state.isConnected,
   })));
   const env = environments.find((e) => e.id === activeEnvId) ?? environments[0];
   if (!env) return null;
   const kindLabel = env.kind === "local" ? "Local" : env.kind === "wsl" ? "WSL" : "Remote";
+  
+  // If the environment is Local/WSL and the websocket is connected, it should show as green (connected)
+  // Only SSH environments use the env.status field explicitly for their own connection state
+  const isEnvConnected = env.kind === "ssh" ? env.status === "connected" : isConnected;
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -195,7 +201,7 @@ function EnvBadge() {
         >
           <span
             className={`size-1.5 rounded-full ${
-              env.status === "connected" ? "bg-emerald-500" : "bg-muted-foreground/60"
+              isEnvConnected ? "bg-emerald-500" : "bg-muted-foreground/60"
             }`}
           />
           <span className="font-medium">{env.name}</span>

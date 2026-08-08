@@ -397,19 +397,6 @@ MANDATORY WORKFLOW:
     crate::debug_log!("  -> Codebase/File Budget: {} tokens", file_budget_tokens);
     crate::debug_log!("  -> Knowledge Budget: {} tokens", knowledge_budget_tokens);
 
-    // Send Telemetry Update to Frontend
-    if let Ok(msg) = serde_json::to_string(&crate::messages::BackendResponse::TelemetryUpdate {
-        context_window,
-        system_tokens: 0, // Fallback since base_system_tokens is not available here
-        knowledge_tokens: knowledge_budget_tokens,
-        history_tokens: total_budget_for_alloc - file_budget_tokens - knowledge_budget_tokens,
-        file_tokens: file_budget_tokens,
-        free_tokens: output_reserve + safety_margin,
-        active_model: None, // Will update when we get provider model name below
-    }) {
-        let _ = client_sender.send(Message::text(msg));
-    }
-
     // Convert new user prompt to tokens
     let mut prompt_text_for_estimation = prompt.clone();
 
@@ -453,6 +440,8 @@ MANDATORY WORKFLOW:
 
     // Now append optional context conditionally based on FIXED budgets to preserve KV cache
     let mut context_text = String::new();
+    let mut actual_file_tokens = 0;
+    let mut actual_knowledge_tokens = 0;
 
     // === AUTOMATIC PROJECT MEMORY (High/Medium Priority) ===
     let mut memory_text = String::new();
@@ -562,6 +551,9 @@ MANDATORY WORKFLOW:
                     context_text.push_str(&file_header);
                     context_text.push_str(&truncated_content);
                     context_text.push_str(file_footer);
+                    actual_file_tokens += estimate_tokens(&file_header)
+                        + estimate_tokens(&truncated_content)
+                        + estimate_tokens(file_footer);
                 }
             }
         }
@@ -599,6 +591,9 @@ MANDATORY WORKFLOW:
                             context_text.push_str(&k_header);
                             context_text.push_str(&truncated_k);
                             context_text.push_str(k_footer);
+                            actual_knowledge_tokens += estimate_tokens(&k_header)
+                                + estimate_tokens(&truncated_k)
+                                + estimate_tokens(k_footer);
                         }
                     }
                 }
@@ -634,6 +629,7 @@ MANDATORY WORKFLOW:
         .saturating_sub(system_tokens)
         .saturating_sub(prompt_tokens);
 
+    let mut actual_history_tokens = 0;
     let mut history_messages = Vec::new();
 
     // Iterate backwards to keep the most recent context
@@ -647,11 +643,14 @@ MANDATORY WORKFLOW:
         let mut full_text = String::new();
         if let Some(parts_arr) = parts {
             for part in parts_arr {
-                if part.get("type").and_then(|v| v.as_str()) == Some("text") {
+                let part_type = part.get("type").and_then(|v| v.as_str());
+                if part_type == Some("text") || part_type == Some("compact") {
                     if let Some(txt) = part.get("text").and_then(|v| v.as_str()) {
                         full_text.push_str(txt);
                     }
                 }
+                // VERY IMPORTANT: We DO NOT include `type: "thinking"` here.
+                // Including it bloats the LLM prompt with thousands of past reasoning tokens, causing severe slowdowns.
             }
         }
 
@@ -659,6 +658,7 @@ MANDATORY WORKFLOW:
             let msg_tokens = estimate_tokens(&full_text);
             if remaining_history_budget > msg_tokens + 50 {
                 remaining_history_budget -= msg_tokens;
+                actual_history_tokens += msg_tokens;
                 history_messages.push(json!({ "role": role, "content": full_text }));
             } else if remaining_history_budget > 200 {
                 // If it's a long message but we have *some* budget, truncate it
@@ -667,6 +667,7 @@ MANDATORY WORKFLOW:
                     "...[TRUNCATED HISTORY] {}",
                     &full_text[full_text.len().saturating_sub(char_limit)..]
                 );
+                actual_history_tokens += remaining_history_budget;
                 history_messages.push(json!({ "role": role, "content": truncated }));
                 break; // Stop completely
             } else {
@@ -677,6 +678,29 @@ MANDATORY WORKFLOW:
 
     // Since we collected backwards, reverse it before appending
     history_messages.reverse();
+
+    // Calculate free tokens properly based on what we actually used vs max window
+    let total_used = system_tokens
+        + actual_knowledge_tokens
+        + actual_history_tokens
+        + actual_file_tokens
+        + prompt_tokens;
+    let free_tokens = context_window
+        .saturating_sub(total_used)
+        .saturating_sub(output_reserve);
+
+    // Send Telemetry Update to Frontend AFTER we know the actual usage
+    if let Ok(msg) = serde_json::to_string(&crate::messages::BackendResponse::TelemetryUpdate {
+        context_window,
+        system_tokens: system_tokens,
+        knowledge_tokens: actual_knowledge_tokens,
+        history_tokens: actual_history_tokens,
+        file_tokens: actual_file_tokens,
+        free_tokens,
+        active_model: None, // Will update when we get provider model name below
+    }) {
+        let _ = client_sender.send(Message::text(msg));
+    }
 
     if !system_text.is_empty() {
         messages.push(json!({"role": "system", "content": system_text}));
@@ -694,11 +718,17 @@ MANDATORY WORKFLOW:
 
     let mut loop_messages = messages.clone();
     let mut iteration = 0;
+    // We increase max iterations from 15 to 30, because complex tasks (like DB queries, reads, edits)
+    // legitimately require many sequential tool calls.
+    let max_iterations = 30;
 
     loop {
-        if iteration >= 15 {
+        if iteration >= max_iterations {
             send_chunk(
-                "\n\n**Error:** Max codebase iterations reached.".to_string(),
+                format!(
+                    "\n\n**Error:** Max codebase iterations ({}) reached.",
+                    max_iterations
+                ),
                 true,
                 &request_id,
                 &client_sender,
@@ -873,88 +903,163 @@ MANDATORY WORKFLOW:
                                                         is_reasoning = false;
                                                     }
 
+                                                    // Check if the stream has finished.
+                                                    // If we're using a reasoning model, we must NOT parse tools from inside its `<think>` block.
+                                                    // We create a cleaned version of the text that strips out anything inside <think>...</think>.
+                                                    let mut clean_for_tools =
+                                                        full_assistant_response.clone();
+
+                                                    // Strip <think> blocks
+                                                    while let Some(start) =
+                                                        clean_for_tools.find("<think>")
+                                                    {
+                                                        if let Some(end) = clean_for_tools[start..]
+                                                            .find("</think>")
+                                                        {
+                                                            let before = &clean_for_tools[..start];
+                                                            let after =
+                                                                &clean_for_tools[start + end + 8..];
+                                                            clean_for_tools =
+                                                                format!("{}{}", before, after);
+                                                        } else {
+                                                            // No closing tag yet, ignore everything after <think>
+                                                            clean_for_tools = clean_for_tools
+                                                                [..start]
+                                                                .to_string();
+                                                            break;
+                                                        }
+                                                    }
+
+                                                    // Strip <|begin_of_thought|> blocks (DeepSeek R1 style)
+                                                    while let Some(start) =
+                                                        clean_for_tools.find("<|begin_of_thought|>")
+                                                    {
+                                                        if let Some(end) = clean_for_tools[start..]
+                                                            .find("<|end_of_thought|>")
+                                                        {
+                                                            let before = &clean_for_tools[..start];
+                                                            let after = &clean_for_tools
+                                                                [start + end + 18..];
+                                                            clean_for_tools =
+                                                                format!("{}{}", before, after);
+                                                        } else {
+                                                            clean_for_tools = clean_for_tools
+                                                                [..start]
+                                                                .to_string();
+                                                            break;
+                                                        }
+                                                    }
+
+                                                    // Strip <|think|> blocks (Alternative)
+                                                    while let Some(start) =
+                                                        clean_for_tools.find("<|think|>")
+                                                    {
+                                                        if let Some(end) = clean_for_tools[start..]
+                                                            .find("</|think|>")
+                                                        {
+                                                            let before = &clean_for_tools[..start];
+                                                            let after = &clean_for_tools
+                                                                [start + end + 10..];
+                                                            clean_for_tools =
+                                                                format!("{}{}", before, after);
+                                                        } else {
+                                                            clean_for_tools = clean_for_tools
+                                                                [..start]
+                                                                .to_string();
+                                                            break;
+                                                        }
+                                                    }
+
                                                     // Detect @@CODE: ... @@ or @@MEMORY: ... @@ mid-stream
-                                                    if let Some(start_idx) =
-                                                        full_assistant_response.rfind("@@MCP:")
-                                                    {
-                                                        let after_code = &full_assistant_response
-                                                            [start_idx + 6..];
-                                                        if let Some(end_idx) = after_code.find("@@")
+                                                    // Only process if we are NOT currently reasoning (so we don't interrupt mid-thought)
+                                                    if !is_reasoning {
+                                                        if let Some(start_idx) =
+                                                            clean_for_tools.rfind("@@MCP:")
                                                         {
-                                                            let full_cmd =
-                                                                after_code[..end_idx].trim();
-                                                            code_command = Some((
-                                                                "mcp".to_string(),
-                                                                full_cmd.to_string(),
-                                                            ));
-                                                        }
-                                                    } else if let Some(start_idx) =
-                                                        full_assistant_response.rfind("@@MEMORY:")
-                                                    {
-                                                        let after_code = &full_assistant_response
-                                                            [start_idx + 9..];
-                                                        if let Some(end_idx) = after_code.find("@@")
-                                                        {
-                                                            let full_cmd =
-                                                                after_code[..end_idx].trim();
-                                                            code_command = Some((
-                                                                "memory".to_string(),
-                                                                full_cmd.to_string(),
-                                                            ));
-                                                        }
-                                                    } else if let Some(start_idx) =
-                                                        full_assistant_response.rfind("@@RUN:")
-                                                    {
-                                                        let after_code = &full_assistant_response
-                                                            [start_idx + 6..];
-                                                        if let Some(end_idx) = after_code.find("@@")
-                                                        {
-                                                            let full_cmd =
-                                                                after_code[..end_idx].trim();
-                                                            code_command = Some((
-                                                                "run".to_string(),
-                                                                full_cmd.to_string(),
-                                                            ));
-                                                        }
-                                                    } else if let Some(start_idx) =
-                                                        full_assistant_response.rfind("@@CODE:")
-                                                    {
-                                                        let after_code = &full_assistant_response
-                                                            [start_idx + 7..];
-                                                        if let Some(end_idx) = after_code.find("@@")
-                                                        {
-                                                            let full_cmd =
-                                                                after_code[..end_idx].trim();
-                                                            if let Some(space_idx) =
-                                                                full_cmd.find(' ')
+                                                            let after_code =
+                                                                &clean_for_tools[start_idx + 6..];
+                                                            if let Some(end_idx) =
+                                                                after_code.find("@@")
                                                             {
-                                                                let cmd = full_cmd[..space_idx]
-                                                                    .trim()
-                                                                    .to_string();
-                                                                let arg = full_cmd[space_idx..]
-                                                                    .trim()
-                                                                    .to_string();
-                                                                code_command = Some((cmd, arg));
-                                                            } else {
+                                                                let full_cmd =
+                                                                    after_code[..end_idx].trim();
                                                                 code_command = Some((
+                                                                    "mcp".to_string(),
                                                                     full_cmd.to_string(),
-                                                                    String::new(),
                                                                 ));
                                                             }
-                                                        }
-                                                    } else if let Some(start_idx) =
-                                                        full_assistant_response.rfind("@@WEB:")
-                                                    {
-                                                        let after_code = &full_assistant_response
-                                                            [start_idx + 6..];
-                                                        if let Some(end_idx) = after_code.find("@@")
+                                                        } else if let Some(start_idx) =
+                                                            clean_for_tools.rfind("@@MEMORY:")
                                                         {
-                                                            let full_cmd =
-                                                                after_code[..end_idx].trim();
-                                                            code_command = Some((
-                                                                "web".to_string(),
-                                                                full_cmd.to_string(),
-                                                            ));
+                                                            let after_code =
+                                                                &clean_for_tools[start_idx + 9..];
+                                                            if let Some(end_idx) =
+                                                                after_code.find("@@")
+                                                            {
+                                                                let full_cmd =
+                                                                    after_code[..end_idx].trim();
+                                                                code_command = Some((
+                                                                    "memory".to_string(),
+                                                                    full_cmd.to_string(),
+                                                                ));
+                                                            }
+                                                        } else if let Some(start_idx) =
+                                                            clean_for_tools.rfind("@@RUN:")
+                                                        {
+                                                            let after_code =
+                                                                &clean_for_tools[start_idx + 6..];
+                                                            if let Some(end_idx) =
+                                                                after_code.find("@@")
+                                                            {
+                                                                let full_cmd =
+                                                                    after_code[..end_idx].trim();
+                                                                code_command = Some((
+                                                                    "run".to_string(),
+                                                                    full_cmd.to_string(),
+                                                                ));
+                                                            }
+                                                        } else if let Some(start_idx) =
+                                                            clean_for_tools.rfind("@@CODE:")
+                                                        {
+                                                            let after_code =
+                                                                &clean_for_tools[start_idx + 7..];
+                                                            if let Some(end_idx) =
+                                                                after_code.find("@@")
+                                                            {
+                                                                let full_cmd =
+                                                                    after_code[..end_idx].trim();
+                                                                if let Some(space_idx) =
+                                                                    full_cmd.find(' ')
+                                                                {
+                                                                    let cmd = full_cmd[..space_idx]
+                                                                        .trim()
+                                                                        .to_string();
+                                                                    let arg = full_cmd[space_idx..]
+                                                                        .trim()
+                                                                        .to_string();
+                                                                    code_command = Some((cmd, arg));
+                                                                } else {
+                                                                    code_command = Some((
+                                                                        full_cmd.to_string(),
+                                                                        String::new(),
+                                                                    ));
+                                                                }
+                                                            }
+                                                        } else if let Some(start_idx) =
+                                                            clean_for_tools.rfind("@@WEB:")
+                                                        {
+                                                            let after_code =
+                                                                &clean_for_tools[start_idx + 6..];
+                                                            if let Some(end_idx) =
+                                                                after_code.find("@@")
+                                                            {
+                                                                let full_cmd =
+                                                                    after_code[..end_idx].trim();
+                                                                code_command = Some((
+                                                                    "web".to_string(),
+                                                                    full_cmd.to_string(),
+                                                                ));
+                                                            }
                                                         }
                                                     }
                                                 }

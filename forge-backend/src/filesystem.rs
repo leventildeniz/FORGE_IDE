@@ -85,16 +85,29 @@ pub fn list_dir_contents<'a>(
                 || file_name == "target"
                 || file_name == ".next"
                 || file_name == "dist"
+                || file_name == "build"
+                || file_name == ".svelte-kit"
+                || file_name == ".tanstack"
+                || file_name == ".lovable"
+                || file_name == ".expo"
+                || file_name == ".nuxt"
+                || file_name == "coverage"
+                || file_name == "logs"
+                || file_name == "venv"
+                || file_name == ".venv"
+                || file_name == "env"
+                || file_name == ".env"
+                || file_name == "__pycache__"
                 || file_name == ".forge_memory"
             {
                 continue;
             }
 
-            let metadata = match fs::metadata(&entry_path).await {
-                Ok(m) => m,
+            let file_type = match entry.file_type().await {
+                Ok(ft) => ft,
                 Err(e) => {
                     eprintln!(
-                        "Backend Error: Cannot read metadata '{}': {} (Skipping)",
+                        "Backend Error: Cannot read file type '{}': {} (Skipping)",
                         entry_path.to_string_lossy(),
                         e
                     );
@@ -105,9 +118,9 @@ pub fn list_dir_contents<'a>(
             let mut node = FileNode {
                 path: entry_path.to_string_lossy().into_owned(),
                 name: file_name,
-                is_dir: metadata.is_dir(),
-                is_file: metadata.is_file(), // YENİ EKLENDİ
-                size: metadata.len(),        // YENİ EKLENDİ
+                is_dir: file_type.is_dir(),
+                is_file: file_type.is_file(),
+                size: 0, // Avoid heavy fs::metadata call just for size unless needed.
                 children: None,
                 content: None,
             };
