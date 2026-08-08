@@ -149,7 +149,7 @@ export function AIPanel() {
       ? estimateTokens(activeModel.systemPrompt)
       : 0;
   const totalTokens = currentFileTokens + inputTokens + systemTokens;
-  const maxTokens = activeModel?.contextWindow || 8192;
+  const maxTokens = activeModel?.contextWindow || 128000;
   const tokenPercentage = Math.min(100, Math.round((totalTokens / maxTokens) * 100));
 
   const safeChatHistory = Array.isArray(chatHistory) ? chatHistory : [];

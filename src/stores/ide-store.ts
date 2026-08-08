@@ -619,6 +619,7 @@ export const useIDEStore = create<IDEStore>()(
                   if (isDone && state.activeAiRequestId === msgId) {
                     // Only clear the global active request ID if it belongs to THIS message
                     state.activeAiRequestId = null;
+                    state.streaming = false;
                   }
 
                   const newMessages = state.messages.map((m) => {
