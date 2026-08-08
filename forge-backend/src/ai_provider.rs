@@ -144,6 +144,11 @@ pub async fn handle_ai_chat_stream(
     request_id: Option<String>,
     client_sender: UnboundedSender<Message>,
     cancellation_token: CancellationToken,
+    clients: std::sync::Arc<
+        tokio::sync::Mutex<std::collections::HashMap<usize, crate::ClientSession>>,
+    >,
+    client_id: usize,
+    is_wsl: bool,
 ) {
     let endpoint = model
         .get("endpoint")
@@ -303,6 +308,8 @@ You have FOUR mandatory Sub-Agents. Output ONLY the exact tool tag to trigger th
 
 2. RUN AGENT (Terminal Execution):
    - Execute shell commands, tests, or builds: @@RUN: <command>@@ (e.g. @@RUN: cargo check@@ or @@RUN: ls -al@@)
+   > NOTE: Terminal commands are run in a background PTY. You are running in the background. ASLA (NEVER) use `sudo` or any command that prompts for a password or interactive user input (like prompts, confirmations, y/n).
+   > If a task requires `sudo` or admin privileges, DO NOT run it. Instead, reply to the user and say: "Bunu sizin terminalde çalıştırmanız gerekiyor (You need to run this in your terminal)."
    > WARNING: For destructive commands (e.g. `rm -rf`), ALWAYS ask for permission first.
 
 3. WEB AGENT (Internet Access & Scraper):
@@ -1293,99 +1300,85 @@ MANDATORY WORKFLOW:
                         result_text = format!("Directory tree for {}:\n{}", path, tree_str);
                         ui_feedback = format!("```plaintext\n{}\n```\n", tree_str);
                     } else if cmd == "run" {
-                        #[cfg(target_os = "windows")]
-                        let (shell, shell_arg) = ("cmd", "/C");
-                        #[cfg(not(target_os = "windows"))]
-                        let (shell, shell_arg) = ("sh", "-c");
+                        let term_id = format!("agent_run_{}", rand::random::<u32>());
 
-                        let mut command = tokio::process::Command::new(shell);
-                        command.arg(shell_arg).arg(&arg);
-                        if !proj_root.is_empty() {
-                            command.current_dir(proj_root);
-                        }
+                        match crate::terminal::spawn_agent_terminal(
+                            term_id.clone(),
+                            proj_root.to_string(),
+                            is_wsl,
+                            client_sender.clone(),
+                            arg.clone(),
+                        ) {
+                            Ok((term_handle, mut output_rx)) => {
+                                // Add to global terminals so the UI can send keystrokes to it
+                                {
+                                    let mut clients_guard = clients.lock().await;
+                                    if let Some(session) = clients_guard.get_mut(&client_id) {
+                                        session
+                                            .terminals
+                                            .insert(term_id.clone(), Box::new(term_handle));
+                                    }
+                                }
 
-                        // Add a timeout of 15 seconds so long-running commands (e.g., servers) don't hang the loop
-                        match tokio::time::timeout(
-                            std::time::Duration::from_secs(15),
-                            command.output(),
-                        )
-                        .await
-                        {
-                            Ok(Ok(output)) => {
-                                let stdout = String::from_utf8_lossy(&output.stdout);
-                                let stderr = String::from_utf8_lossy(&output.stderr);
-                                let status = output.status;
+                                // Send the special markdown block to render an inline terminal
+                                ui_feedback = format!("```forge-terminal\n{}\n```\n", term_id);
+                                let _ = send_chunk(ui_feedback, false, &request_id, &client_sender);
+                                ui_feedback = String::new(); // Don't send again below
 
-                                let result_obj = serde_json::json!({
-                                    "command": arg,
-                                    "exit_code": status.code(),
-                                    "success": status.success(),
-                                    "stdout": stdout.trim(),
-                                    "stderr": stderr.trim(),
-                                });
+                                // Read the output from the PTY
+                                let mut full_output = String::new();
 
-                                let mut combined_json =
-                                    serde_json::to_string_pretty(&result_obj).unwrap_or_default();
+                                // Let's add a timeout so the agent doesn't hang forever if the command never exits
+                                let timeout_duration = std::time::Duration::from_secs(45); // 45 seconds for interactive tasks
 
+                                let read_task = async {
+                                    while let Some(data) = output_rx.recv().await {
+                                        full_output.push_str(&data);
+                                    }
+                                };
+
+                                match tokio::time::timeout(timeout_duration, read_task).await {
+                                    Ok(_) => {} // Finished normally
+                                    Err(_) => {
+                                        full_output.push_str(
+                                            "\n\n[WARNING: Command timed out after 45 seconds]",
+                                        );
+                                    }
+                                }
+
+                                // Remove terminal from global state
+                                {
+                                    let mut clients_guard = clients.lock().await;
+                                    if let Some(session) = clients_guard.get_mut(&client_id) {
+                                        session.terminals.remove(&term_id);
+                                    }
+                                }
+
+                                // Clean up the output string
                                 let char_limit = 20000;
-                                if combined_json.len() > char_limit {
+                                if full_output.len() > char_limit {
                                     let trunc_msg = "\n... [OUTPUT TRUNCATED DUE TO LENGTH LIMIT]";
                                     let safe_len = char_limit - trunc_msg.len();
-                                    combined_json =
-                                        format!("{}{}", &combined_json[..safe_len], trunc_msg);
-                                }
-                                result_text = combined_json;
-
-                                let mut ui_combined = format!("Exit Status: {}\n", status);
-                                if !stdout.trim().is_empty() {
-                                    ui_combined.push_str(&format!("STDOUT:\n{}\n", stdout.trim()));
-                                }
-                                if !stderr.trim().is_empty() {
-                                    ui_combined.push_str(&format!("STDERR:\n{}\n", stderr.trim()));
-                                }
-                                if stdout.trim().is_empty() && stderr.trim().is_empty() {
-                                    ui_combined.push_str("(No output)\n");
+                                    full_output =
+                                        format!("{}{}", &full_output[..safe_len], trunc_msg);
                                 }
 
-                                // Limit UI output to ~1000 characters so we don't flood the chat screen
-                                let ui_char_limit = 1000;
-                                let ui_output = if ui_combined.len() > ui_char_limit {
-                                    format!(
-                                        "{}... \n\n[OUTPUT TRUNCATED IN UI - AGENT SEES MORE]",
-                                        &ui_combined[..ui_char_limit]
-                                    )
-                                } else {
-                                    ui_combined
-                                };
-                                ui_feedback = format!("```bash\n$ {}\n{}\n```\n", arg, ui_output);
-                            }
-                            Ok(Err(e)) => {
-                                let error_obj = serde_json::json!({
+                                result_text = serde_json::to_string_pretty(&serde_json::json!({
                                     "command": arg,
-                                    "success": false,
-                                    "error": e.to_string(),
-                                    "suggestion": "Check if the command exists or if you have the correct permissions/syntax."
-                                });
-                                result_text = serde_json::to_string_pretty(&error_obj)
-                                    .unwrap_or_else(|_| e.to_string());
-                                ui_feedback = format!("```bash\n$ {}\nError: {}\n```\n", arg, e);
+                                    "status": "completed",
+                                    "output": full_output.trim(),
+                                }))
+                                .unwrap_or_default();
                             }
-                            Err(_) => {
-                                let error_obj = serde_json::json!({
-                                    "command": arg,
-                                    "success": false,
-                                    "error": "Command timed out after 15 seconds.",
-                                    "suggestion": "The command might be a long-running process (like a server). Try running it in a separate terminal or optimize it."
-                                });
-                                result_text = serde_json::to_string_pretty(&error_obj)
-                                    .unwrap_or_else(|_| "Timeout".to_string());
+                            Err(e) => {
+                                result_text = format!("Error spawning terminal: {}", e);
                                 ui_feedback = format!(
-                                    "```bash\n$ {}\nError: Timed out after 15s\n```\n",
+                                    "> ⚠️ **Error:** Failed to spawn interactive terminal for `{}`\n\n",
                                     arg
                                 );
                             }
                         }
-                    } else if cmd == "read" {
+                    } else if cmd == "git" {
                         let mut actual_path = arg.clone();
                         let mut line_range: Option<(usize, usize)> = None;
 

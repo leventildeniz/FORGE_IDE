@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { IDEStore, useIDEStore } from "@/stores/ide-store";
+import { IDEStore, useIDEStore, forgeTerminalBuffers } from "@/stores/ide-store";
 import { useShallow } from "zustand/react/shallow";
 import * as xterm from "@xterm/xterm";
 const { Terminal } = xterm;
@@ -116,10 +116,10 @@ export function TerminalPanel() {
   );
 }
 
-function XTermInstance({ terminalId }: { terminalId: string }) {
+export function XTermInstance({ terminalId }: { terminalId: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const terminalRef = useRef<Terminal | null>(null);
-  const fitAddonRef = useRef<FitAddon | null>(null);
+  const terminalRef = useRef<any>(null); // changed to any to fix typeof Terminal mismatch
+  const fitAddonRef = useRef<any>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -139,6 +139,11 @@ function XTermInstance({ terminalId }: { terminalId: string }) {
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
     term.open(containerRef.current);
+
+    // Flush any buffered data that arrived before we mounted
+    if (forgeTerminalBuffers[terminalId]) {
+      term.write(forgeTerminalBuffers[terminalId]);
+    }
 
     // Fit immediately after opening
     setTimeout(() => {

@@ -79,7 +79,7 @@ export function PublishView() {
     }
     const ws = getWebSocketManager();
     ws.sendRequest({
-      type: BackendRequestType.ExportProject as unknown as BackendRequestType,
+      type: BackendRequestType.ExportProject,
       payload: {
         project_root: projectRootPath,
       },

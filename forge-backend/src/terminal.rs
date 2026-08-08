@@ -46,6 +46,135 @@ impl TerminalHandle {
     }
 }
 
+pub fn spawn_agent_terminal(
+    terminal_id: String,
+    cwd: String,
+    is_wsl: bool,
+    client_sender: tokio::sync::mpsc::UnboundedSender<warp::ws::Message>,
+    command: String,
+) -> Result<
+    (TerminalHandle, tokio::sync::mpsc::UnboundedReceiver<String>),
+    Box<dyn std::error::Error + Send + Sync>,
+> {
+    let pty_system = NativePtySystem::default();
+
+    let pair = pty_system.openpty(PtySize {
+        rows: 24,
+        cols: 80,
+        pixel_width: 0,
+        pixel_height: 0,
+    })?;
+
+    let cmd = if is_wsl {
+        #[cfg(target_os = "windows")]
+        {
+            let mut c = CommandBuilder::new("wsl.exe");
+            c.cwd(cwd);
+            c.arg("--exec");
+            c.arg("bash");
+            c.arg("-c");
+            c.arg(command);
+            c
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            let mut c = CommandBuilder::new("bash");
+            c.cwd(cwd);
+            c.arg("-c");
+            c.arg(command);
+            c
+        }
+    } else {
+        #[cfg(target_os = "windows")]
+        {
+            let mut c = CommandBuilder::new("powershell.exe");
+            c.cwd(cwd);
+            c.arg("-Command");
+            c.arg(command);
+            c
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            let mut c = CommandBuilder::new("bash");
+            c.cwd(cwd);
+            c.arg("-c");
+            c.arg(command);
+            c
+        }
+    };
+
+    let _child = pair.slave.spawn_command(cmd)?;
+    let master = Arc::new(Mutex::new(pair.master));
+
+    // Writer task
+    let (input_tx, mut input_rx) = mpsc::unbounded_channel::<String>();
+    let master_for_writer = master.clone();
+
+    task::spawn(async move {
+        let writer = {
+            let m = master_for_writer.lock().await;
+            (**m).take_writer()
+        };
+        if let Ok(mut writer) = writer {
+            while let Some(data) = input_rx.recv().await {
+                let _ = writer.write_all(data.as_bytes());
+                let _ = writer.flush();
+            }
+        }
+    });
+
+    // Reader task
+    let master_for_reader = master.clone();
+    let term_id_clone = terminal_id.clone();
+    let (output_tx, output_rx) = mpsc::unbounded_channel::<String>();
+
+    task::spawn_blocking(move || {
+        let reader = {
+            if let Ok(m) = master_for_reader.try_lock() {
+                (**m).try_clone_reader()
+            } else {
+                return;
+            }
+        };
+
+        if let Ok(mut reader) = reader {
+            let mut buf = [0u8; 1024];
+            while let Ok(n) = reader.read(&mut buf) {
+                if n == 0 {
+                    break;
+                }
+                let data = String::from_utf8_lossy(&buf[..n]).to_string();
+                let _ = output_tx.send(data.clone());
+
+                let msg = crate::messages::BackendResponse::TerminalOutput {
+                    terminal_id: term_id_clone.clone(),
+                    data,
+                };
+                let ws_msg = warp::ws::Message::text(serde_json::to_string(&msg).unwrap());
+                if client_sender.send(ws_msg).is_err() {
+                    break;
+                }
+            }
+
+            // Send closed event
+            let msg = crate::messages::BackendResponse::TerminalClosed {
+                terminal_id: term_id_clone,
+            };
+            let _ = client_sender.send(warp::ws::Message::text(
+                serde_json::to_string(&msg).unwrap(),
+            ));
+        }
+    });
+
+    Ok((
+        TerminalHandle {
+            t_type: TerminalType::Local { pty_master: master },
+            input_tx,
+        },
+        output_rx,
+    ))
+}
+
 pub fn spawn_local_terminal(
     terminal_id: String,
     cwd: String,
@@ -53,6 +182,7 @@ pub fn spawn_local_terminal(
     rows: u16,
     is_wsl: bool,
     client_sender: tokio::sync::mpsc::UnboundedSender<warp::ws::Message>,
+    initial_command: Option<String>,
 ) -> Result<TerminalHandle, Box<dyn std::error::Error + Send + Sync>> {
     let pty_system = NativePtySystem::default();
 
@@ -68,6 +198,12 @@ pub fn spawn_local_terminal(
         {
             let mut c = CommandBuilder::new("wsl.exe");
             c.cwd(cwd); // Not sure if wsl.exe respects cwd this way, but we try
+            if let Some(ic) = initial_command {
+                c.arg("--exec");
+                c.arg("bash");
+                c.arg("-c");
+                c.arg(ic);
+            }
             c
         }
         #[cfg(not(target_os = "windows"))]
@@ -76,6 +212,10 @@ pub fn spawn_local_terminal(
             // to spawn a terminal, we can just use bash directly.
             let mut c = CommandBuilder::new("bash");
             c.cwd(cwd);
+            if let Some(ic) = initial_command {
+                c.arg("-c");
+                c.arg(ic);
+            }
             c
         }
     } else {
@@ -83,12 +223,20 @@ pub fn spawn_local_terminal(
         {
             let mut c = CommandBuilder::new("powershell.exe");
             c.cwd(cwd);
+            if let Some(ic) = initial_command {
+                c.arg("-Command");
+                c.arg(ic);
+            }
             c
         }
         #[cfg(not(target_os = "windows"))]
         {
             let mut c = CommandBuilder::new("bash");
             c.cwd(cwd);
+            if let Some(ic) = initial_command {
+                c.arg("-c");
+                c.arg(ic);
+            }
             c
         }
     };

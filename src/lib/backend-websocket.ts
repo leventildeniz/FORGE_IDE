@@ -79,14 +79,14 @@ class WebSocketManager {
     this.ws.onmessage = (event) => {
       try {
         const response: BackendResponse = JSON.parse(event.data as string);
-        const requestId = response.payload.request_id; // Değişiklik burada!
+        const requestId = (response.payload as any).request_id; // Değişiklik burada!
 
         if (requestId && this.pendingRequests.has(requestId)) {
           const pending = this.pendingRequests.get(requestId);
           this.pendingRequests.delete(requestId);
           if (pending) {
             if (response.type === BackendResponseType.Error) {
-              pending.reject(response.payload.message);
+              pending.reject((response.payload as any).message);
             } else {
               pending.resolve(response);
             }
@@ -148,14 +148,14 @@ class WebSocketManager {
 
   public sendRequest(request: BackendRequest): Promise<any> {
     // Generate request_id if not present in payload
-    let requestId = request.payload.request_id;
+    let requestId = (request.payload as any).request_id;
     if (!requestId) {
       requestId =
         typeof crypto !== "undefined" && crypto.randomUUID
           ? crypto.randomUUID()
           : Math.random().toString(36).substring(2, 15) +
             Math.random().toString(36).substring(2, 15);
-      request.payload.request_id = requestId;
+      (request.payload as any).request_id = requestId;
     }
 
     return new Promise((resolve, reject) => {

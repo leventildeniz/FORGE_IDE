@@ -128,7 +128,7 @@ async fn client_connected(ws: WebSocket, clients: Clients) {
         };
 
         if msg.is_text() {
-            let text_msg = msg.to_str().unwrap();
+            let text_msg = msg.to_str().unwrap_or_default();
             match serde_json::from_str::<messages::BackendRequest>(text_msg) {
                 Ok(request) => {
                     let response_opt = handle_websocket_message(request, my_id, &clients).await;
@@ -148,7 +148,7 @@ async fn client_connected(ws: WebSocket, clients: Clients) {
                         message: format!("Failed to parse message: {}", e),
                         request_id: None,
                     };
-                    let json_response = serde_json::to_string(&err_response).unwrap();
+                    let json_response = serde_json::to_string(&err_response).unwrap_or_default();
                     let mut clients_guard = clients.lock().await;
                     if let Some(client_session) = clients_guard.get_mut(&my_id) {
                         let _ = client_session.sender.send(Message::text(json_response));
@@ -527,7 +527,7 @@ async fn handle_websocket_message(
                 environment_id,
                 opened_at: std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
-                    .unwrap()
+                    .unwrap_or_default()
                     .as_millis() as i64,
             };
             match db::save_recent_project(&proj) {
@@ -847,6 +847,7 @@ async fn handle_websocket_message(
                     24,
                     is_wsl,
                     sender,
+                    None,
                 ) {
                     Ok(handle) => {
                         client_session
@@ -1797,6 +1798,9 @@ async fn handle_websocket_message(
                 tasks_clone.lock().await.insert(rid.clone(), token.clone());
             }
 
+            let is_wsl = false;
+
+            let clients_clone = clients.clone();
             tokio::spawn(async move {
                 crate::ai_provider::handle_ai_chat_stream(
                     model,
@@ -1808,6 +1812,9 @@ async fn handle_websocket_message(
                     request_id_clone.clone(),
                     sender,
                     token_clone,
+                    clients_clone,
+                    client_id,
+                    is_wsl,
                 )
                 .await;
                 if let Some(rid) = request_id_clone {

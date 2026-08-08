@@ -1,5 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+
+// Global buffer for terminal output to prevent race conditions where backend sends
+// data before XTermInstance component mounts.
+export const forgeTerminalBuffers: Record<string, string> = {};
+
 import type {
   AIModel,
   BottomTab,
@@ -46,6 +51,7 @@ type UISlice = {
     file_tokens: number;
     free_tokens: number;
     active_model: string;
+    inference_speed?: number;
     traces: { timestamp: number; message: string }[];
   };
   addTelemetryTrace: (message: string) => void;
@@ -321,6 +327,8 @@ const pendingPromises = new Map<
 // Buffer for throttling AI Stream updates to React UI
 let streamBuffer: Record<string, string> = {};
 let lastStreamUpdate = 0;
+let streamStartTime = 0;
+let streamGenChars = 0;
 
 export const useIDEStore = create<IDEStore>()(
   persist(
@@ -527,17 +535,27 @@ export const useIDEStore = create<IDEStore>()(
               break;
             }
             case BackendResponseType.TerminalOutput: {
+              const termId = response.payload.terminal_id;
+              const data = response.payload.data;
+              
+              if (!forgeTerminalBuffers[termId]) {
+                forgeTerminalBuffers[termId] = "";
+              }
+              forgeTerminalBuffers[termId] += data;
+
               const event = new CustomEvent("forge-terminal-output", {
                 detail: {
-                  terminalId: response.payload.terminal_id,
-                  data: response.payload.data,
+                  terminalId: termId,
+                  data: data,
                 },
               });
               window.dispatchEvent(event);
               break;
             }
             case BackendResponseType.TerminalClosed: {
-              get().removeTerminal(response.payload.terminal_id);
+              const termId = response.payload.terminal_id;
+              get().removeTerminal(termId);
+              delete forgeTerminalBuffers[termId];
               break;
             }
             case BackendResponseType.GetChatSessionsResponse: {
@@ -574,12 +592,24 @@ export const useIDEStore = create<IDEStore>()(
 
               if (!streamBuffer[msgId]) {
                 streamBuffer[msgId] = "";
+                streamStartTime = Date.now();
+                streamGenChars = 0;
               }
               streamBuffer[msgId] += chunk;
+              streamGenChars += chunk.length;
 
               const now = Date.now();
-              if (now - lastStreamUpdate > 100 || isDone) {
+              const activeMsg = get().messages.find((m) => m.id === msgId);
+              const currentLen = activeMsg?.rawContent?.length || 0;
+              // Dynamic throttle: 30ms for small texts, up to 100ms for massive texts
+              const throttle = Math.min(100, Math.max(30, Math.floor(currentLen / 200)));
+
+              if (now - lastStreamUpdate > throttle || isDone) {
                 lastStreamUpdate = now;
+
+                const elapsedSec = (now - streamStartTime) / 1000;
+                // Rough estimate: 1 token ≈ 4 chars
+                const currentSpeed = elapsedSec > 0.5 ? Math.round((streamGenChars / 4) / elapsedSec * 10) / 10 : 0;
 
                 set((state) => {
                   if (state.activeAiRequestId !== msgId && !isDone) {
@@ -655,6 +685,11 @@ export const useIDEStore = create<IDEStore>()(
 
                   // Clear the buffer since we applied it
                   streamBuffer[msgId] = "";
+
+                  let newTelemetry = state.telemetry;
+                  if (currentSpeed > 0) {
+                    newTelemetry = { ...state.telemetry, inference_speed: currentSpeed };
+                  }
 
                   // Save user message to backend occasionally if streaming is done
                   if (isDone) {
@@ -881,6 +916,7 @@ export const useIDEStore = create<IDEStore>()(
                     messages: parsedMessages,
                     streaming: !isDone,
                     isCompacting: isDone ? false : state.isCompacting,
+                    telemetry: newTelemetry,
                   };
                 });
               }
@@ -1157,6 +1193,7 @@ export const useIDEStore = create<IDEStore>()(
           file_tokens: 0,
           free_tokens: 32000,
           active_model: "Waiting for inference...",
+          inference_speed: 0,
           traces: [],
         },
         addTelemetryTrace: (message: string) => {

@@ -1,3 +1,4 @@
+import React from "react";
 import { useState, useEffect } from "react";
 import {
   ChevronRight,
@@ -168,7 +169,6 @@ export function FileExplorer() {
               nodes={tree}
               depth={0}
               filter={query.trim().toLowerCase()}
-              activePath={activePath}
               onOpen={openFile}
               isSshEnvironment={isSshEnvironment}
               activeEnvironment={activeEnvironment}
@@ -213,7 +213,6 @@ function TreeList({
   nodes,
   depth,
   filter,
-  activePath,
   onOpen,
   isSshEnvironment,
   activeEnvironment,
@@ -221,7 +220,6 @@ function TreeList({
   nodes: FileNode[];
   depth: number;
   filter: string;
-  activePath: string | null;
   onOpen: (path: string) => void;
   isSshEnvironment: boolean;
   activeEnvironment: Environment | undefined;
@@ -234,7 +232,6 @@ function TreeList({
           node={n}
           depth={depth}
           filter={filter}
-          activePath={activePath}
           onOpen={onOpen}
           isSshEnvironment={isSshEnvironment}
           activeEnvironment={activeEnvironment}
@@ -256,11 +253,10 @@ function nodeMatches(node: FileNode, filter: string): boolean {
   return false;
 }
 
-function TreeNode({
+const TreeNode = React.memo(function TreeNode({
   node,
   depth,
   filter,
-  activePath,
   onOpen,
   isSshEnvironment,
   activeEnvironment,
@@ -268,11 +264,11 @@ function TreeNode({
   node: FileNode;
   depth: number;
   filter: string;
-  activePath: string | null;
   onOpen: (path: string) => void;
   isSshEnvironment: boolean;
   activeEnvironment: Environment | undefined;
 }) {
+  const isActive = useIDEStore((s) => s.activePath === node.path);
   const [open, setOpen] = useState(Boolean(filter));
   const {
     sftpCreateDir,
@@ -338,7 +334,6 @@ function TreeNode({
             nodes={node.children}
             depth={depth + 1}
             filter={filter}
-            activePath={activePath}
             onOpen={onOpen}
             isSshEnvironment={isSshEnvironment}
             activeEnvironment={activeEnvironment}
@@ -349,7 +344,6 @@ function TreeNode({
   }
 
   const Icon = iconFor(node.name);
-  const isActive = activePath === node.path;
   return (
     <li>
       <ContextMenu>
@@ -380,7 +374,7 @@ function TreeNode({
       </ContextMenu>
     </li>
   );
-}
+});
 
 function FileContextItems({
   node,

@@ -88,12 +88,15 @@ export function TelemetryView() {
             <div className="space-y-4">
               <div className="flex justify-between items-end">
                 <div className="text-3xl font-bold font-mono">
-                  0.0<span className="text-sm text-muted-foreground font-sans"> t/s</span>
+                  {telemetry.inference_speed ?? 0.0}<span className="text-sm text-muted-foreground font-sans"> t/s</span>
                 </div>
                 <div className="text-xs text-muted-foreground">Average</div>
               </div>
               <div className="h-2 w-full bg-secondary rounded-full overflow-hidden flex">
-                <div className="bg-emerald-500 h-full w-[0%]" />
+                <div 
+                  className="bg-emerald-500 h-full transition-all duration-300" 
+                  style={{ width: `${Math.min(100, ((telemetry.inference_speed ?? 0) / 100) * 100)}%` }} 
+                />
               </div>
             </div>
           </div>

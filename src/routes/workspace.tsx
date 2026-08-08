@@ -47,17 +47,10 @@ function Workspace() {
     initializeBackendConnection, // Get the new action from store
   } = useIDEStore(
     useShallow((state: IDEStore) => ({
-      projectName: state.projectName,
-      projectRootPath: state.projectRootPath,
       explorerOpen: state.explorerOpen,
       aiOpen: state.aiOpen,
       bottomOpen: state.bottomOpen,
-      bottomTab: state.bottomTab,
-      environments: state.environments,
-      activeEnvId: state.activeEnvId,
-      tabs: state.tabs,
       workspaceView: state.workspaceView,
-      activePath: state.activePath,
       saveActive: state.saveActive,
       toggleExplorer: state.toggleExplorer,
       toggleAi: state.toggleAi,

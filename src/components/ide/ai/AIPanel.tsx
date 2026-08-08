@@ -149,7 +149,7 @@ export function AIPanel() {
       ? estimateTokens(activeModel.systemPrompt)
       : 0;
   const totalTokens = currentFileTokens + inputTokens + systemTokens;
-  const maxTokens = activeModel?.maxTokens || 8192;
+  const maxTokens = activeModel?.contextWindow || 8192;
   const tokenPercentage = Math.min(100, Math.round((totalTokens / maxTokens) * 100));
 
   const safeChatHistory = Array.isArray(chatHistory) ? chatHistory : [];
@@ -995,7 +995,13 @@ const Message = React.memo(function Message({
                 </button>
               ) : (
                 <button
-                  onClick={() => regenerate(message.id)}
+                  onClick={() => {
+                    if (streaming) {
+                      alert("Lütfen mevcut akışın bitmesini bekleyin veya durdurun.");
+                      return;
+                    }
+                    regenerate(message.id);
+                  }}
                   className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground"
                 >
                   <RefreshCw className="size-3" /> Regenerate
@@ -1017,7 +1023,7 @@ const Message = React.memo(function Message({
 
 const remarkPluginsList = [remarkGfm];
 
-function PartView({
+const PartView = React.memo(function PartView({
   part,
   isUser,
   onReview,
@@ -1028,6 +1034,24 @@ function PartView({
   isUser: boolean;
   isGenerating?: boolean;
 }) {
+  const markdownComponents = useMemo(() => ({
+    code({ node, inline, className, children, ...props }: any) {
+      const match = /language-([\w-]+)/.exec(className || "");
+      return !inline && match ? (
+        <CodeBlock code={String(children).replace(/\n$/, "")} language={match[1]} isGenerating={isGenerating} />
+      ) : (
+        <code className={className} {...props}>
+          {children}
+        </code>
+      );
+    },
+    pre({ children }: any) {
+      // ReactMarkdown wraps code blocks in a <pre>, but our CodeBlock handles it.
+      // So we just return the children (which is the CodeBlock).
+      return <>{children}</>;
+    },
+  }), [isGenerating]);
+
   if (part.type === "compact") {
     return (
       <div className="relative my-2 w-full max-w-2xl mx-auto overflow-hidden rounded-md border border-purple-500/30 bg-purple-500/5 shadow-sm">
@@ -1045,6 +1069,11 @@ function PartView({
   }
 
   if (part.type === "text") {
+    // Check if the message only contains a reasoning block (i.e., generating right now)
+    if (isGenerating && part.text.trim().startsWith("<think>") && !part.text.includes("</think>")) {
+      return null;
+    }
+
     // If user's text is the internal system command, render it as a tiny terminal chip
     if (isUser && part.text.startsWith("[SYSTEM COMMAND]")) {
       return (
@@ -1060,23 +1089,7 @@ function PartView({
       >
         <ReactMarkdown
           remarkPlugins={remarkPluginsList}
-          components={{
-            code({ node, inline, className, children, ...props }: any) {
-              const match = /language-(\w+)/.exec(className || "");
-              return !inline && match ? (
-                <CodeBlock code={String(children).replace(/\n$/, "")} language={match[1]} />
-              ) : (
-                <code className={className} {...props}>
-                  {children}
-                </code>
-              );
-            },
-            pre({ children }) {
-              // ReactMarkdown wraps code blocks in a <pre>, but our CodeBlock handles it.
-              // So we just return the children (which is the CodeBlock).
-              return <>{children}</>;
-            },
-          }}
+          components={markdownComponents}
         >
           {part.text}
         </ReactMarkdown>
@@ -1084,7 +1097,7 @@ function PartView({
     );
   }
   if (part.type === "code") {
-    return <CodeBlock code={part.code} language={part.language} />;
+    return <CodeBlock code={part.code} language={part.language} isGenerating={isGenerating} />;
   }
   if (part.type === "plan") {
     return (
@@ -1129,10 +1142,8 @@ function PartView({
             )}
           </span>
         </summary>
-        <div className="px-3 pb-3 pt-0 text-xs overflow-x-auto break-words prose prose-sm prose-invert max-w-none prose-p:my-0.5 prose-p:leading-snug prose-ul:my-0.5 prose-li:my-0 opacity-90">
-          <ReactMarkdown remarkPlugins={remarkPluginsList}>
-            {part.text.replace(/\n\s*\n+/g, "\n\n")}
-          </ReactMarkdown>
+        <div className="px-3 pb-3 pt-0 text-xs overflow-x-auto whitespace-pre-wrap font-mono opacity-90 text-[#a0a0a0]">
+          {part.text}
         </div>
       </details>
     );
@@ -1160,10 +1171,25 @@ function PartView({
   }
 
   return null;
-}
+});
 
-function CodeBlock({ code, language }: { code: string; language: string }) {
+const CodeBlock = React.memo(function CodeBlock({ code, language, isGenerating }: { code: string; language: string, isGenerating?: boolean }) {
   const [copied, setCopied] = useState(false);
+
+  if (language === "forge-terminal") {
+    const termId = code.trim();
+    return (
+      <div className="my-3 overflow-hidden rounded-md border border-border bg-[#1e1e1e] shadow-sm">
+        <div className="flex items-center justify-between border-b border-white/10 bg-[#2d2d2d] px-3 py-1.5 text-[10px] uppercase tracking-wider text-gray-400">
+          <span className="font-semibold text-green-400">Interactive Terminal</span>
+          <span className="text-xs text-muted-foreground">Type here to interact...</span>
+        </div>
+        <div className="h-[250px] w-full relative">
+          <XTermInstance terminalId={termId} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="my-3 overflow-hidden rounded-md border border-border bg-[#1e1e1e] shadow-sm">
@@ -1182,22 +1208,29 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
         </button>
       </div>
       <div className="max-h-[400px] overflow-auto text-[11px] leading-relaxed">
-        <SyntaxHighlighter
-          language={language || "text"}
-          style={vscDarkPlus}
-          customStyle={{
-            margin: 0,
-            padding: "1rem",
-            background: "transparent",
-            fontSize: "11px",
-          }}
-        >
-          {code}
-        </SyntaxHighlighter>
+        {/* Only syntax highlight if NOT generating to save CPU/Main Thread. If generating, use simple <pre> */}
+        {isGenerating ? (
+          <pre className="m-0 p-4 bg-transparent text-[11px] text-[#d4d4d4] font-mono">
+            {code}
+          </pre>
+        ) : (
+          <SyntaxHighlighter
+            language={language || "text"}
+            style={vscDarkPlus}
+            customStyle={{
+              margin: 0,
+              padding: "1rem",
+              background: "transparent",
+              fontSize: "11px",
+            }}
+          >
+            {code}
+          </SyntaxHighlighter>
+        )}
       </div>
     </div>
   );
-}
+});
 
 function ChangeSetCard({ id, onReview }: { id: string; onReview: () => void }) {
   const cs = useIDEStore((s) => s.changeSets[id]) as ChangeSet | undefined;
