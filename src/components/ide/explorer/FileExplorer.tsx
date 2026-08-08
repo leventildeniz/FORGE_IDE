@@ -13,7 +13,7 @@ import {
   Search,
 } from "lucide-react";
 import { FileNode, Environment } from "@/types/ide";
-import { useIDEStore } from "@/stores/ide-store";
+import { IDEStore, useIDEStore } from "@/stores/ide-store";
 import { useShallow } from "zustand/react/shallow";
 import { Input } from "@/components/ui/input";
 import {
@@ -45,19 +45,21 @@ export function FileExplorer() {
     sftpListDir,
     createFile,
     createDirectory,
-  } = useIDEStore(useShallow((state) => ({
-    projectName: state.projectName,
-    tree: state.tree,
-    openFile: state.openFile,
-    activePath: state.activePath,
-    fetchFileTree: state.fetchFileTree,
-    projectRootPath: state.projectRootPath,
-    activeEnvId: state.activeEnvId,
-    environments: state.environments,
-    sftpListDir: state.sftpListDir,
-    createFile: state.createFile,
-    createDirectory: state.createDirectory,
-  })));
+  } = useIDEStore(
+    useShallow((state: IDEStore) => ({
+      projectName: state.projectName,
+      tree: state.tree,
+      openFile: state.openFile,
+      activePath: state.activePath,
+      fetchFileTree: state.fetchFileTree,
+      projectRootPath: state.projectRootPath,
+      activeEnvId: state.activeEnvId,
+      environments: state.environments,
+      sftpListDir: state.sftpListDir,
+      createFile: state.createFile,
+      createDirectory: state.createDirectory,
+    })),
+  );
   const [query, setQuery] = useState("");
 
   const activeEnvironment = environments.find((env) => env.id === activeEnvId);
@@ -282,17 +284,19 @@ function TreeNode({
     deletePath,
     renamePath,
     duplicateFile,
-  } = useIDEStore(useShallow((state) => ({
-    sftpCreateDir: state.sftpCreateDir,
-    sftpRemoveDir: state.sftpRemoveDir,
-    sftpRemoveFile: state.sftpRemoveFile,
-    sftpRename: state.sftpRename,
-    createDirectory: state.createDirectory,
-    createFile: state.createFile,
-    deletePath: state.deletePath,
-    renamePath: state.renamePath,
-    duplicateFile: state.duplicateFile,
-  })));
+  } = useIDEStore(
+    useShallow((state: IDEStore) => ({
+      sftpCreateDir: state.sftpCreateDir,
+      sftpRemoveDir: state.sftpRemoveDir,
+      sftpRemoveFile: state.sftpRemoveFile,
+      sftpRename: state.sftpRename,
+      createDirectory: state.createDirectory,
+      createFile: state.createFile,
+      deletePath: state.deletePath,
+      renamePath: state.renamePath,
+      duplicateFile: state.duplicateFile,
+    })),
+  );
 
   // console.log(`TreeNode: Node: ${node.name}, Path: ${node.path}, is_dir: ${node.is_dir}, Children count: ${node.children ? node.children.length : 'N/A'}`);
 

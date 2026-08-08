@@ -19,6 +19,7 @@ import type {
   CustomProfile,
   ContextSettings,
   ContextStrategy,
+  AIChatMode,
 } from "@/types/ide";
 import {
   BackendRequest,
@@ -278,7 +279,7 @@ export type IDEStore = UISlice &
   ModelSlice &
   MCPSlice &
   ProfileSlice &
-  GitHubSlice &
+  PublishSlice &
   ContextSlice & {
     initializeBackendConnection: () => void; // New action
   };
@@ -321,7 +322,7 @@ const pendingPromises = new Map<
 let streamBuffer: Record<string, string> = {};
 let lastStreamUpdate = 0;
 
-export const useIDEStore = create<IDEState>()(
+export const useIDEStore = create<IDEStore>()(
   persist(
     (set, get) => {
       // Initialize WebSocketManager
@@ -349,7 +350,7 @@ export const useIDEStore = create<IDEState>()(
           // If a project is already open, refresh its tree and its isolated chat history
           if (get().projectRootPath) {
             get().fetchFileTree(get().projectRootPath as string);
-            
+
             wsManager.sendRequest({
               type: BackendRequestType.GetChatSessions,
               payload: { project_root: get().projectRootPath },
@@ -587,7 +588,7 @@ export const useIDEStore = create<IDEState>()(
 
                   if (isDone && state.activeAiRequestId === msgId) {
                     // Only clear the global active request ID if it belongs to THIS message
-                    state.activeAiRequestId = null; 
+                    state.activeAiRequestId = null;
                   }
 
                   const newMessages = state.messages.map((m) => {
@@ -724,9 +725,18 @@ export const useIDEStore = create<IDEState>()(
                             );
 
                             // If it is a terminal log or plain text AND it doesn't have a file path comment, do NOT make it a changeset.
-                            const ignoreLangs = ["bash", "sh", "plaintext", "text", "log", "terminal", "powershell", "cmd"];
+                            const ignoreLangs = [
+                              "bash",
+                              "sh",
+                              "plaintext",
+                              "text",
+                              "log",
+                              "terminal",
+                              "powershell",
+                              "cmd",
+                            ];
                             const isIgnoredLang = ignoreLangs.includes(lang.toLowerCase().trim());
-                            
+
                             if ((isIgnoredLang || !lang.trim()) && !pathCommentMatch) {
                               newParts.push({ type: "code", code, language: lang || "text" }); // Push as a simple view-only code block instead of text
                               continue;
@@ -778,9 +788,7 @@ export const useIDEStore = create<IDEState>()(
                                 oldContent = existingTab.content;
                               }
                             } else {
-                              const activeTab = state.tabs.find(
-                                (t) => t.path === state.activePath,
-                              );
+                              const activeTab = state.tabs.find((t) => t.path === state.activePath);
                               // Default to a snippet path to ensure it passes 'untitled' checks and can be saved safely.
                               const ext = lang || "txt";
                               targetPath =
@@ -830,14 +838,14 @@ export const useIDEStore = create<IDEState>()(
                     if (aiMsg) {
                       // If we are compacting, change all 'text' parts of the AI's response to 'compact'
                       let partsToSave = aiMsg.parts.filter((p: any) => p.type !== "thinking");
-                      
+
                       if (state.isCompacting) {
-                        partsToSave = partsToSave.map(p => 
-                          p.type === "text" ? { type: "compact", text: p.text } : p
+                        partsToSave = partsToSave.map((p) =>
+                          p.type === "text" ? { type: "compact", text: p.text } : p,
                         );
                         // Also update the local state to match
-                        parsedMessages = parsedMessages.map(m => 
-                          m.id === msgId ? { ...m, parts: partsToSave } : m
+                        parsedMessages = parsedMessages.map((m) =>
+                          m.id === msgId ? { ...m, parts: partsToSave } : m,
                         );
                       }
 
@@ -1013,9 +1021,9 @@ export const useIDEStore = create<IDEState>()(
                 const parts = response.payload.zip_path.split("|");
                 const filename = parts[0] || "export.zip";
                 const b64 = parts[1] || "";
-                
+
                 toast.success(`Project bundled successfully. Downloading...`);
-                
+
                 const link = document.createElement("a");
                 link.href = `data:application/zip;base64,${b64}`;
                 link.download = filename;
@@ -1108,18 +1116,17 @@ export const useIDEStore = create<IDEState>()(
                   telemetry: {
                     ...state.telemetry,
                     ...response.payload,
-                  }
+                  },
                 }));
               }
               break;
             }
             case BackendResponseType.Error:
               if (
-                typeof response.payload.message === "string" && (
-                  response.payload.message === "Generation stopped" ||
+                typeof response.payload.message === "string" &&
+                (response.payload.message === "Generation stopped" ||
                   response.payload.message.includes("AI generation stopped for task") ||
-                  response.payload.message.includes("cancelled")
-                )
+                  response.payload.message.includes("cancelled"))
               ) {
                 console.log("Frontend: Generation stopped by user, ignoring error toast.");
                 break;
@@ -1233,7 +1240,7 @@ export const useIDEStore = create<IDEState>()(
                   },
                 })
                 .catch(console.error);
-                
+
               // Fetch ONLY the chats belonging to this new project root
               getWebSocketManager().sendRequest({
                 type: BackendRequestType.GetChatSessions,
@@ -1241,7 +1248,14 @@ export const useIDEStore = create<IDEState>()(
               });
             } else {
               // Clear chats if no project is open
-              return { projectRootPath: null, tree: [], activePath: null, chatHistory: [], messages: [], activeChatId: null };
+              return {
+                projectRootPath: null,
+                tree: [],
+                activePath: null,
+                chatHistory: [],
+                messages: [],
+                activeChatId: null,
+              };
             }
 
             return {
@@ -1804,8 +1818,9 @@ export const useIDEStore = create<IDEState>()(
         chatHistory: [],
         activeChatId: null,
         chatMode: "code",
+        isCompacting: false,
         setChatMode: (mode) => set({ chatMode: mode }),
-        
+
         // AI State
         messages: [],
         streaming: false,
@@ -1824,7 +1839,7 @@ export const useIDEStore = create<IDEState>()(
           const state = get();
           const msg = state.messageQueue[index];
           if (!msg) return;
-          
+
           // Remove from queue
           set((s) => ({
             messageQueue: s.messageQueue.filter((_, i) => i !== index),
@@ -1832,7 +1847,7 @@ export const useIDEStore = create<IDEState>()(
 
           // Interrupt current stream
           state.stop();
-          
+
           // Wait briefly for backend locks to clear, then send
           setTimeout(() => {
             get().send(msg.text, msg.attachments, msg.contextPills);
@@ -1849,7 +1864,7 @@ export const useIDEStore = create<IDEState>()(
         compactChat: () => {
           const state = get();
           if (state.streaming || state.messages.length === 0) return;
-          
+
           set({ isCompacting: true });
           get().send(
             "[SYSTEM COMMAND] Summarize our entire conversation history above into a dense technical summary. Include all key architectural decisions, the current state of the code, and immediate next steps. Do not include pleasantries. Start directly with the summary. This will serve as our compacted memory.",
@@ -1961,40 +1976,46 @@ export const useIDEStore = create<IDEState>()(
           get().addTelemetryTrace(`AI Stream requested (Model: ${activeModel?.name})`);
           // Calculate the effective chat history by ignoring everything before the last compaction
           let effectiveHistory = state.messages;
-          const lastCompactIndex = effectiveHistory.map(m => m.parts.some(p => p.type === 'compact')).lastIndexOf(true);
+          const lastCompactIndex = effectiveHistory
+            .map((m) => m.parts.some((p) => p.type === "compact"))
+            .lastIndexOf(true);
           if (lastCompactIndex !== -1) {
             effectiveHistory = effectiveHistory.slice(lastCompactIndex);
           }
 
-          wsManager.sendRequest({
-            type: BackendRequestType.AiChatStream,
-            payload: {
-              model: activeModel,
-              profile: activeProfile,
-              chatHistory: effectiveHistory, // Send only the compacted summary and what comes after it
-              prompt: text,
-              mcpServers: state.mcpTools.filter((t) => t.isEnabled),
-              context: {
-                activeFile: activeTab
-                  ? { path: activeTab.path, content: activeTab.content }
-                  : undefined,
-                attachments: attachments,
-                knowledgeFiles: contextPills
-                  .filter((p) => p.type === "knowledge")
-                  .map((p) => p.name),
-                projectRoot: state.projectRootPath || undefined,
-                contextSettings: currentContextSettings,
+          wsManager
+            .sendRequest({
+              type: BackendRequestType.AiChatStream,
+              payload: {
+                model: activeModel,
+                profile: activeProfile,
+                chatHistory: effectiveHistory, // Send only the compacted summary and what comes after it
+                prompt: text,
+                mcpServers: state.mcpTools.filter((t) => t.isEnabled),
+                context: {
+                  activeFile: activeTab
+                    ? { path: activeTab.path, content: activeTab.content }
+                    : undefined,
+                  attachments: attachments,
+                  knowledgeFiles: contextPills
+                    .filter((p) => p.type === "knowledge")
+                    .map((p) => p.name),
+                  projectRoot: state.projectRootPath || undefined,
+                  contextSettings: currentContextSettings,
+                },
+                request_id: assistantId, // Use assistantId as request_id so we can stream into it
               },
-              request_id: assistantId, // Use assistantId as request_id so we can stream into it
-            },
-          }).catch((err) => {
-            console.log("Frontend: AiChatStream promise rejected (likely stopped by user):", err);
-          });
+            })
+            .catch((err) => {
+              console.log("Frontend: AiChatStream promise rejected (likely stopped by user):", err);
+            });
         },
         stop: () => {
           const requestId = get().activeAiRequestId;
           if (requestId) {
-            get().addTelemetryTrace(`AI generation stopped by user for task: ${requestId.substring(0, 8)}...`);
+            get().addTelemetryTrace(
+              `AI generation stopped by user for task: ${requestId.substring(0, 8)}...`,
+            );
             wsManager.sendRequest({
               type: BackendRequestType.StopAiGeneration,
               payload: { request_id: requestId },
@@ -2695,34 +2716,34 @@ export const useIDEStore = create<IDEState>()(
           if (!root) return;
           getWebSocketManager().sendRequest({
             type: BackendRequestType.GetGitStatus as any,
-            payload: { project_root: root }
+            payload: { project_root: root },
           });
         },
         generateCommitMessage: () => {
           const root = get().projectRootPath;
-          const activeModel = get().models.find(m => m.id === get().activeModelId);
+          const activeModel = get().models.find((m) => m.id === get().activeModelId);
           if (!root || !activeModel) {
-             toast.error("Project root or active model not found.");
-             return;
+            toast.error("Project root or active model not found.");
+            return;
           }
           set({ isGeneratingCommit: true, generatedCommitMessage: "" });
           getWebSocketManager().sendRequest({
             type: BackendRequestType.GenerateCommitMessage as any,
-            payload: { project_root: root, model: activeModel }
+            payload: { project_root: root, model: activeModel },
           });
         },
         commitAndPush: (message: string) => {
           const root = get().projectRootPath;
           if (!root) return;
           if (!message.trim()) {
-             toast.error("Commit message cannot be empty.");
-             return;
+            toast.error("Commit message cannot be empty.");
+            return;
           }
           set({ isPushing: true });
           get().addTelemetryTrace(`Git Commit & Push initiated: "${message}"`);
           getWebSocketManager().sendRequest({
             type: BackendRequestType.GitCommitAndPush as any,
-            payload: { project_root: root, message }
+            payload: { project_root: root, message },
           });
         },
         pullFromRemote: () => {
@@ -2733,7 +2754,7 @@ export const useIDEStore = create<IDEState>()(
           get().addTelemetryTrace(`Git Pull from remote initiated.`);
           getWebSocketManager().sendRequest({
             type: BackendRequestType.GitPull as any,
-            payload: { project_root: root }
+            payload: { project_root: root },
           });
         },
         initGitRepo: () => {
@@ -2741,7 +2762,7 @@ export const useIDEStore = create<IDEState>()(
           if (!root) return;
           getWebSocketManager().sendRequest({
             type: BackendRequestType.GitInit as any,
-            payload: { project_root: root }
+            payload: { project_root: root },
           });
         },
         addGitRemote: (url: string) => {
@@ -2749,7 +2770,7 @@ export const useIDEStore = create<IDEState>()(
           if (!root) return;
           getWebSocketManager().sendRequest({
             type: BackendRequestType.GitAddRemote as any,
-            payload: { project_root: root, remote_url: url }
+            payload: { project_root: root, remote_url: url },
           });
         },
         removeGitRemote: () => {
@@ -2757,7 +2778,7 @@ export const useIDEStore = create<IDEState>()(
           if (!root) return;
           getWebSocketManager().sendRequest({
             type: BackendRequestType.GitRemoveRemote as any,
-            payload: { project_root: root }
+            payload: { project_root: root },
           });
         },
         connectGitHub: (user) =>

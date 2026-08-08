@@ -13,7 +13,7 @@ import {
   PanelBottom,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useIDEStore } from "@/stores/ide-store";
+import { IDEStore, useIDEStore } from "@/stores/ide-store";
 import { useShallow } from "zustand/react/shallow";
 import {
   DropdownMenu,
@@ -34,16 +34,18 @@ export function Topbar() {
     toggleAi,
     toggleBottom,
     setCommandOpen,
-  } = useIDEStore(useShallow((state) => ({
-    projectName: state.projectName,
-    explorerOpen: state.explorerOpen,
-    aiOpen: state.aiOpen,
-    bottomOpen: state.bottomOpen,
-    toggleExplorer: state.toggleExplorer,
-    toggleAi: state.toggleAi,
-    toggleBottom: state.toggleBottom,
-    setCommandOpen: state.setCommandOpen,
-  })));
+  } = useIDEStore(
+    useShallow((state: IDEStore) => ({
+      projectName: state.projectName,
+      explorerOpen: state.explorerOpen,
+      aiOpen: state.aiOpen,
+      bottomOpen: state.bottomOpen,
+      toggleExplorer: state.toggleExplorer,
+      toggleAi: state.toggleAi,
+      toggleBottom: state.toggleBottom,
+      setCommandOpen: state.setCommandOpen,
+    })),
+  );
   const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
@@ -174,17 +176,19 @@ function ToggleBtn({
 }
 
 function EnvBadge() {
-  const { environments, activeEnvId, setWorkspaceView, setConfigureTab, isConnected } = useIDEStore(useShallow((state) => ({
-    environments: state.environments,
-    activeEnvId: state.activeEnvId,
-    setWorkspaceView: state.setWorkspaceView,
-    setConfigureTab: state.setConfigureTab,
-    isConnected: state.isConnected,
-  })));
+  const { environments, activeEnvId, setWorkspaceView, setConfigureTab, isConnected } = useIDEStore(
+    useShallow((state: IDEStore) => ({
+      environments: state.environments,
+      activeEnvId: state.activeEnvId,
+      setWorkspaceView: state.setWorkspaceView,
+      setConfigureTab: state.setConfigureTab,
+      isConnected: state.isConnected,
+    })),
+  );
   const env = environments.find((e) => e.id === activeEnvId) ?? environments[0];
   if (!env) return null;
   const kindLabel = env.kind === "local" ? "Local" : env.kind === "wsl" ? "WSL" : "Remote";
-  
+
   // If the environment is Local/WSL and the websocket is connected, it should show as green (connected)
   // Only SSH environments use the env.status field explicitly for their own connection state
   const isEnvConnected = env.kind === "ssh" ? env.status === "connected" : isConnected;
@@ -214,12 +218,14 @@ function EnvBadge() {
 }
 
 function ModelBadge() {
-  const { models, activeModelId, setWorkspaceView, setConfigureTab } = useIDEStore(useShallow((state) => ({
-    models: state.models,
-    activeModelId: state.activeModelId,
-    setWorkspaceView: state.setWorkspaceView,
-    setConfigureTab: state.setConfigureTab,
-  })));
+  const { models, activeModelId, setWorkspaceView, setConfigureTab } = useIDEStore(
+    useShallow((state: IDEStore) => ({
+      models: state.models,
+      activeModelId: state.activeModelId,
+      setWorkspaceView: state.setWorkspaceView,
+      setConfigureTab: state.setConfigureTab,
+    })),
+  );
   const model = models.find((m) => m.id === activeModelId) ?? models[0];
   if (!model) return null;
   const connLabel =

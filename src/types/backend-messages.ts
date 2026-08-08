@@ -241,8 +241,14 @@ export type BackendRequest =
         request_id?: string;
       };
     }
-  | { type: BackendRequestType.GetChatSessions; payload: { project_root: string; request_id?: string } }
-  | { type: BackendRequestType.SaveChatSession; payload: { session: any; project_root: string; request_id?: string } }
+  | {
+      type: BackendRequestType.GetChatSessions;
+      payload: { project_root: string; request_id?: string };
+    }
+  | {
+      type: BackendRequestType.SaveChatSession;
+      payload: { session: any; project_root: string; request_id?: string };
+    }
   | { type: BackendRequestType.DeleteChatSession; payload: { id: string; request_id?: string } }
   | {
       type: BackendRequestType.GetChatMessages;
@@ -344,6 +350,42 @@ export type BackendRequest =
   | {
       type: BackendRequestType.SetDebugLog;
       payload: { enabled: boolean; request_id?: string };
+    }
+  | {
+      type: BackendRequestType.SpawnTerminal;
+      payload: {
+        terminal_id: string;
+        cwd: string;
+        cols: number;
+        rows: number;
+        environmentId?: string;
+        active_environment_details?: Environment;
+        request_id?: string;
+      };
+    }
+  | {
+      type: BackendRequestType.TerminalInput;
+      payload: {
+        terminal_id: string;
+        data: string;
+        request_id?: string;
+      };
+    }
+  | {
+      type: BackendRequestType.ResizeTerminal;
+      payload: {
+        terminal_id: string;
+        cols: number;
+        rows: number;
+        request_id?: string;
+      };
+    }
+  | {
+      type: BackendRequestType.CloseTerminal;
+      payload: {
+        terminal_id: string;
+        request_id?: string;
+      };
     };
 
 export enum BackendResponseType {

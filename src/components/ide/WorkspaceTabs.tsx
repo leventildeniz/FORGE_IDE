@@ -1,5 +1,5 @@
 import { Eye, Code2, Rocket, Settings2, Activity } from "lucide-react";
-import { useIDEStore } from "@/stores/ide-store";
+import { IDEStore, useIDEStore } from "@/stores/ide-store";
 import { useShallow } from "zustand/react/shallow";
 import type { WorkspaceView } from "@/types/ide";
 import {
@@ -25,11 +25,11 @@ const tabs: {
 
 export function WorkspaceTabs() {
   const { workspaceView, setWorkspaceView, previewRunning } = useIDEStore(
-    useShallow((state) => ({
+    useShallow((state: IDEStore) => ({
       workspaceView: state.workspaceView,
       setWorkspaceView: state.setWorkspaceView,
       previewRunning: state.previewRunning,
-    }))
+    })),
   );
   return (
     <div className="flex h-9 shrink-0 items-center gap-0.5 border-b border-border bg-panel px-2">

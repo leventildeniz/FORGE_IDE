@@ -61,12 +61,12 @@ _Last Updated: 2026-08-03_
 ## 🚨 Critical Issues to Resolve (Current Blockers)
 
 1. **Scraper HTML Extraction Quality**:
-   - *Problem*: The DuckDuckGo scraper creates the `.md` file, but it occasionally fails to extract meaningful text (like specific currency exchange rates or widgets), leaving the model with an empty or useless knowledge file.
-   - *Next Step*: Improve the CSS selectors in `knowledge::search_web` or use a more robust parsing mechanism for search engine results.
+   - _Problem_: The DuckDuckGo scraper creates the `.md` file, but it occasionally fails to extract meaningful text (like specific currency exchange rates or widgets), leaving the model with an empty or useless knowledge file.
+   - _Next Step_: Improve the CSS selectors in `knowledge::search_web` or use a more robust parsing mechanism for search engine results.
 
 2. **Post-RAG Thinking Freeze**:
-   - *Problem*: After the Sub-Agent fetches data and the UI auto-continues the prompt, the main LLM enters a secondary `<think>` phase to process the new data but sometimes freezes, gets cut off, or enters a loop without finishing the response.
-   - *Next Step*: Debug token limits (`output_reserve`) or investigate if stopping the stream abruptly corrupts the LLM's internal state on the provider side.
+   - _Problem_: After the Sub-Agent fetches data and the UI auto-continues the prompt, the main LLM enters a secondary `<think>` phase to process the new data but sometimes freezes, gets cut off, or enters a loop without finishing the response.
+   - _Next Step_: Debug token limits (`output_reserve`) or investigate if stopping the stream abruptly corrupts the LLM's internal state on the provider side.
 
 3. **AST / Codebase Crawler Sub-Agent**:
    - Once basic web searching is completely stable, implement the `read_file` or `search_codebase` Sub-Agent logic so the model can autonomously navigate the local project topology without needing the user to open tabs.

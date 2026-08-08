@@ -4,6 +4,7 @@
 Finalize "Forge IDE" v1.0 (a Local-First LLM-powered IDE). Complete Phase 8 (Hardening, Code Cleanup, and Security) and transition into Phase 9 (Documentation & Release).
 
 **State**
+
 - **UI/UX & Mock Data ✅:** Removed all "Lovable" artifacts, mock data panels (Problems/Output), and unused `.Identifier` metadata files. Replaced the generic logo with a custom "Anvil" SVG.
 - **AI Chat Queue ✅:** Built a Zed-style message queue. If the AI is streaming and the user types, a prompt allows them to "Interrupt & Send" or "Add to Queue", preventing overlapping backend API calls.
 - **Security ✅:** Implemented a "Master Password" Lock Screen to protect the IDE from local network access. Fixed a router crash related to unauthenticated redirects.
@@ -18,16 +19,19 @@ Finalize "Forge IDE" v1.0 (a Local-First LLM-powered IDE). Complete Phase 8 (Har
 - **UI Tweaks & Settings Crash Fix ✅:** Fixed a React render crash on the Settings/Publish pages caused by incorrect shallow binding. Updated the global `EnvBadge` to display "Connected" status accurately based on active environment (SSH vs Local/WSL).
 
 **Context**
+
 - **Architecture:** Rust backend (`forge-backend/`) + React/TypeScript/Zustand frontend (`src/`).
 - **Memory:** The single source of truth for the project roadmap and constraints is `.forge_memory/context.md`.
 - **The Trinity Principle:** The LLM is restricted to a maximum of 3 top-level sub-agent tags (`@@WEB`, `@@CODE`, `@@RUN`).
 
 **Next**
+
 1. **Verify Chat Isolation:** Confirm with the user if the "Data Bleed" fix is working after they execute `cargo build --release` and `sudo systemctl restart forge-backend.service`.
 2. **Phase 9 (Documentation):** Write a comprehensive `README.md` explaining the architecture, the Trinity Agent system, and installation/run steps.
 3. **Code Freeze:** Avoid adding new features ("feature creep"). Focus strictly on stability and documentation.
 
 **Pitfalls (Do Not Repeat)**
+
 - **Zustand UI Freezes (Context Stuffing):** Never use `const { ... } = useStore()` without `useShallow` in components that subscribe to rapidly changing states (like an AI streaming characters). The entire IDE will re-render per character, crashing large projects. Always use `useShallow` explicitly.
 - **SystemD + `cargo run`:** Running `cargo run` inside SystemD causes massive Vite proxy timeouts (`EPIPE`) because the frontend hits the proxy while the backend is still compiling. Always use the compiled binary in `.service` files.
 - **OOM Silent Crashes:** SystemD aggressively kills memory-heavy AI processes without throwing errors (`Deactivated successfully`). Must use `LimitAS=infinity` and `OOMScoreAdjust=-1000`.

@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { useIDEStore } from "@/stores/ide-store";
+import { IDEStore, useIDEStore } from "@/stores/ide-store";
 import { useShallow } from "zustand/react/shallow";
 import { toast } from "sonner";
 import { BackendRequestType } from "@/types/backend-messages";
@@ -41,25 +41,27 @@ export function PublishView() {
     initGitRepo,
     addGitRemote,
     removeGitRemote,
-  } = useIDEStore(useShallow((state) => ({
-    projectName: state.projectName,
-    projectRootPath: state.projectRootPath,
-    isGitRepo: state.isGitRepo,
-    remoteUrl: state.remoteUrl,
-    gitStatus: state.gitStatus,
-    activeBranch: state.activeBranch,
-    generatedCommitMessage: state.generatedCommitMessage,
-    isGeneratingCommit: state.isGeneratingCommit,
-    isPushing: state.isPushing,
-    getGitStatus: state.getGitStatus,
-    generateCommitMessage: state.generateCommitMessage,
-    setGeneratedCommitMessage: state.setGeneratedCommitMessage,
-    commitAndPush: state.commitAndPush,
-    pullFromRemote: state.pullFromRemote,
-    initGitRepo: state.initGitRepo,
-    addGitRemote: state.addGitRemote,
-    removeGitRemote: state.removeGitRemote,
-  })));
+  } = useIDEStore(
+    useShallow((state: IDEStore) => ({
+      projectName: state.projectName,
+      projectRootPath: state.projectRootPath,
+      isGitRepo: state.isGitRepo,
+      remoteUrl: state.remoteUrl,
+      gitStatus: state.gitStatus,
+      activeBranch: state.activeBranch,
+      generatedCommitMessage: state.generatedCommitMessage,
+      isGeneratingCommit: state.isGeneratingCommit,
+      isPushing: state.isPushing,
+      getGitStatus: state.getGitStatus,
+      generateCommitMessage: state.generateCommitMessage,
+      setGeneratedCommitMessage: state.setGeneratedCommitMessage,
+      commitAndPush: state.commitAndPush,
+      pullFromRemote: state.pullFromRemote,
+      initGitRepo: state.initGitRepo,
+      addGitRemote: state.addGitRemote,
+      removeGitRemote: state.removeGitRemote,
+    })),
+  );
 
   const [remoteInput, setRemoteInput] = useState("");
   const [patInput, setPatInput] = useState("");
@@ -303,7 +305,11 @@ export function PublishView() {
                     onClick={handleCommit}
                     size="sm"
                     className="gap-2"
-                    disabled={isPushing || (!gitStatus?.length && !remoteUrl) || (!!gitStatus?.length && !generatedCommitMessage.trim())}
+                    disabled={
+                      isPushing ||
+                      (!gitStatus?.length && !remoteUrl) ||
+                      (!!gitStatus?.length && !generatedCommitMessage.trim())
+                    }
                   >
                     {isPushing ? (
                       <RefreshCw className="size-4 animate-spin" />

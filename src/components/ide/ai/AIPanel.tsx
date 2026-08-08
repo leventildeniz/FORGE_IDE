@@ -33,7 +33,7 @@ import {
   Bot as BotIcon,
   FastForward,
 } from "lucide-react";
-import { useIDEStore } from "@/stores/ide-store";
+import { IDEStore, useIDEStore } from "@/stores/ide-store";
 import { useShallow } from "zustand/react/shallow";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -85,27 +85,29 @@ export function AIPanel() {
     setActiveModel,
     profiles,
     tree,
-  } = useIDEStore(useShallow((state) => ({
-    messages: state.messages,
-    chatHistory: state.chatHistory,
-    activeChatId: state.activeChatId,
-    loadChat: state.loadChat,
-    deleteChat: state.deleteChat,
-    streaming: state.streaming,
-    stop: state.stop,
-    clear: state.clear,
-    regenerate: state.regenerate,
-    send: state.send,
-    compactChat: state.compactChat,
-    setBottomTab: state.setBottomTab,
-    chatMode: state.chatMode,
-    setChatMode: state.setChatMode,
-    models: state.models,
-    activeModelId: state.activeModelId,
-    setActiveModel: state.setActiveModel,
-    profiles: state.profiles,
-    tree: state.tree,
-  })));
+  } = useIDEStore(
+    useShallow((state: IDEStore) => ({
+      messages: state.messages,
+      chatHistory: state.chatHistory,
+      activeChatId: state.activeChatId,
+      loadChat: state.loadChat,
+      deleteChat: state.deleteChat,
+      streaming: state.streaming,
+      stop: state.stop,
+      clear: state.clear,
+      regenerate: state.regenerate,
+      send: state.send,
+      compactChat: state.compactChat,
+      setBottomTab: state.setBottomTab,
+      chatMode: state.chatMode,
+      setChatMode: state.setChatMode,
+      models: state.models,
+      activeModelId: state.activeModelId,
+      setActiveModel: state.setActiveModel,
+      profiles: state.profiles,
+      tree: state.tree,
+    })),
+  );
 
   const [input, setInput] = useState("");
   const pendingAttachments = useIDEStore((s) => s.pendingAttachments);
@@ -214,7 +216,7 @@ export function AIPanel() {
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
     const distanceFromBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
-    
+
     // If scrolled up more than 50px from bottom, pause auto-scroll
     if (distanceFromBottom > 50) {
       setIsAutoScrollPaused(true);
@@ -269,7 +271,8 @@ export function AIPanel() {
 
     if (streaming) {
       toast("AI is currently typing...", {
-        description: "Do you want to interrupt the current response, or queue this message for later?",
+        description:
+          "Do you want to interrupt the current response, or queue this message for later?",
         action: {
           label: "Interrupt & Send",
           onClick: () => {
@@ -535,8 +538,8 @@ export function AIPanel() {
         </div>
       </div>
 
-      <div 
-        ref={listRef} 
+      <div
+        ref={listRef}
         onScroll={handleScroll}
         className="min-h-0 flex-1 overflow-auto p-4 scroll-smooth relative"
       >
@@ -641,19 +644,20 @@ export function AIPanel() {
         {messageQueue.length > 0 && (
           <div className="flex flex-col gap-2 mb-3">
             {messageQueue.map((msg, i) => (
-              <div key={i} className="flex flex-col gap-1.5 p-2.5 rounded-lg border border-orange-500/20 bg-orange-500/5 relative group">
+              <div
+                key={i}
+                className="flex flex-col gap-1.5 p-2.5 rounded-lg border border-orange-500/20 bg-orange-500/5 relative group"
+              >
                 <div className="flex items-center gap-2 mb-1 text-[10px] uppercase font-bold tracking-wider text-orange-500/80">
                   <ListTodo className="size-3" /> Queued Message {i + 1}
                 </div>
-                <div className="text-xs text-white/80 line-clamp-3">
-                  {msg.text}
-                </div>
+                <div className="text-xs text-white/80 line-clamp-3">{msg.text}</div>
                 {msg.attachments && msg.attachments.length > 0 && (
                   <div className="text-[10px] text-muted-foreground mt-1">
                     + {msg.attachments.length} attachment(s)
                   </div>
                 )}
-                
+
                 <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button
                     size="icon"

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useIDEStore } from "@/stores/ide-store";
+import { IDEStore, useIDEStore } from "@/stores/ide-store";
 import { useShallow } from "zustand/react/shallow";
 import {
   Select,
@@ -65,25 +65,27 @@ function SettingsPage() {
     removeProfile,
     contextSettings,
     updateContextSettings,
-  } = useIDEStore(useShallow((state) => ({
-    minimap: state.minimap,
-    toggleMinimap: state.toggleMinimap,
-    models: state.models,
-    activeModelId: state.activeModelId,
-    setActiveModel: state.setActiveModel,
-    addModel: state.addModel,
-    removeModel: state.removeModel,
-    updateModel: state.updateModel,
-    mcpTools: state.mcpTools,
-    addMCPTool: state.addMCPTool,
-    removeMCPTool: state.removeMCPTool,
-    toggleMCPTool: state.toggleMCPTool,
-    profiles: state.profiles,
-    addProfile: state.addProfile,
-    removeProfile: state.removeProfile,
-    contextSettings: state.contextSettings,
-    updateContextSettings: state.updateContextSettings,
-  })));
+  } = useIDEStore(
+    useShallow((state: IDEStore) => ({
+      minimap: state.minimap,
+      toggleMinimap: state.toggleMinimap,
+      models: state.models,
+      activeModelId: state.activeModelId,
+      setActiveModel: state.setActiveModel,
+      addModel: state.addModel,
+      removeModel: state.removeModel,
+      updateModel: state.updateModel,
+      mcpTools: state.mcpTools,
+      addMCPTool: state.addMCPTool,
+      removeMCPTool: state.removeMCPTool,
+      toggleMCPTool: state.toggleMCPTool,
+      profiles: state.profiles,
+      addProfile: state.addProfile,
+      removeProfile: state.removeProfile,
+      contextSettings: state.contextSettings,
+      updateContextSettings: state.updateContextSettings,
+    })),
+  );
 
   const [isAddModelOpen, setIsAddModelOpen] = useState(false);
   const [newModel, setNewModel] = useState<Partial<AIModel>>({

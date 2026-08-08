@@ -13,7 +13,7 @@ import {
   GitBranch,
   Lock,
 } from "lucide-react";
-import { useIDEStore } from "@/stores/ide-store";
+import { IDEStore, useIDEStore } from "@/stores/ide-store";
 import { useShallow } from "zustand/react/shallow";
 import type {
   AIModel,
@@ -53,10 +53,12 @@ const tabs: {
 ];
 
 export function ConfigureView() {
-  const { configureTab, setConfigureTab } = useIDEStore(useShallow((state) => ({
-    configureTab: state.configureTab,
-    setConfigureTab: state.setConfigureTab,
-  })));
+  const { configureTab, setConfigureTab } = useIDEStore(
+    useShallow((state: IDEStore) => ({
+      configureTab: state.configureTab,
+      setConfigureTab: state.setConfigureTab,
+    })),
+  );
   return (
     <div className="flex h-full min-h-0 bg-background">
       <aside className="w-56 shrink-0 border-r border-border bg-panel p-3">
@@ -104,15 +106,23 @@ const envIcon: Record<EnvironmentKind, React.ComponentType<{ className?: string 
 };
 
 function EnvironmentsPane() {
-  const { environments, activeEnvId, setActiveEnv, addEnvironment, removeEnvironment, isConnected } =
-    useIDEStore(useShallow((state) => ({
+  const {
+    environments,
+    activeEnvId,
+    setActiveEnv,
+    addEnvironment,
+    removeEnvironment,
+    isConnected,
+  } = useIDEStore(
+    useShallow((state: IDEStore) => ({
       environments: state.environments,
       activeEnvId: state.activeEnvId,
       setActiveEnv: state.setActiveEnv,
       addEnvironment: state.addEnvironment,
       removeEnvironment: state.removeEnvironment,
       isConnected: state.isConnected,
-    })));
+    })),
+  );
   return (
     <section className="space-y-4">
       <PaneHeader
@@ -124,10 +134,11 @@ function EnvironmentsPane() {
         {environments.map((e) => {
           const Icon = envIcon[e.kind];
           const active = activeEnvId === e.id;
-          
+
           // Only show 'connected' status if the environment is actually active AND connected.
           // Otherwise, it appears as disconnected/inactive.
-          const isEnvConnected = active && (e.kind === "ssh" ? e.status === "connected" : isConnected);
+          const isEnvConnected =
+            active && (e.kind === "ssh" ? e.status === "connected" : isConnected);
           const displayStatus = isEnvConnected ? "connected" : "disconnected";
 
           return (
@@ -344,13 +355,15 @@ function AddEnvironmentDialog({
 /* -------------------- Models -------------------- */
 
 function ModelsPane() {
-  const { models, activeModelId, setActiveModel, addModel, removeModel } = useIDEStore(useShallow((state) => ({
-    models: state.models,
-    activeModelId: state.activeModelId,
-    setActiveModel: state.setActiveModel,
-    addModel: state.addModel,
-    removeModel: state.removeModel,
-  })));
+  const { models, activeModelId, setActiveModel, addModel, removeModel } = useIDEStore(
+    useShallow((state: IDEStore) => ({
+      models: state.models,
+      activeModelId: state.activeModelId,
+      setActiveModel: state.setActiveModel,
+      addModel: state.addModel,
+      removeModel: state.removeModel,
+    })),
+  );
   return (
     <section className="space-y-4">
       <PaneHeader
@@ -575,7 +588,11 @@ function GeneralPane() {
   };
 
   const handleRemovePassword = () => {
-    if (confirm("Are you sure you want to remove the password? The IDE will be accessible to anyone on your network.")) {
+    if (
+      confirm(
+        "Are you sure you want to remove the password? The IDE will be accessible to anyone on your network.",
+      )
+    ) {
       setAppPasswordHash(null);
       alert("Password removed.");
     }
@@ -588,14 +605,14 @@ function GeneralPane() {
     setDebugLogEnabled(newState);
     getWebSocketManager().sendRequest({
       type: BackendRequestType.SetDebugLog as any,
-      payload: { enabled: newState }
+      payload: { enabled: newState },
     });
   };
 
   return (
     <section className="space-y-6">
       <PaneHeader title="General" description="Security and application-wide preferences." />
-      
+
       <div className="rounded-lg border border-border bg-card p-5">
         <div className="flex items-center justify-between">
           <div>
@@ -604,25 +621,35 @@ function GeneralPane() {
               Enable verbose debug logging in the Rust backend terminal.
             </p>
           </div>
-          <Button variant={debugLogEnabled ? "default" : "secondary"} size="sm" onClick={toggleDebugLog}>
+          <Button
+            variant={debugLogEnabled ? "default" : "secondary"}
+            size="sm"
+            onClick={toggleDebugLog}
+          >
             {debugLogEnabled ? "Logging Enabled" : "Logging Disabled"}
           </Button>
         </div>
       </div>
-      
+
       <div className="rounded-lg border border-border bg-card p-5">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-medium">Security</h3>
             <p className="text-xs text-muted-foreground mt-1">
-              Manage your master password to protect your IDE from unauthorized access on the local network.
+              Manage your master password to protect your IDE from unauthorized access on the local
+              network.
             </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleChangePassword}>
               Change Password
             </Button>
-            <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-500 hover:bg-red-400/10" onClick={handleRemovePassword}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-red-400 hover:text-red-500 hover:bg-red-400/10"
+              onClick={handleRemovePassword}
+            >
               Remove Password
             </Button>
           </div>

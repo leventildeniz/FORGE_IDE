@@ -10,7 +10,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { useIDEStore } from "@/stores/ide-store";
+import { IDEStore, useIDEStore } from "@/stores/ide-store";
 import { useShallow } from "zustand/react/shallow";
 import { flattenFileNodes } from "@/lib/utils"; // Updated import to use our new utility function
 import {
@@ -34,16 +34,18 @@ export function CommandMenu() {
     toggleAi,
     toggleBottom,
     saveActive,
-  } = useIDEStore(useShallow((state) => ({
-    commandOpen: state.commandOpen,
-    setCommandOpen: state.setCommandOpen,
-    tree: state.tree,
-    openFile: state.openFile,
-    toggleExplorer: state.toggleExplorer,
-    toggleAi: state.toggleAi,
-    toggleBottom: state.toggleBottom,
-    saveActive: state.saveActive,
-  })));
+  } = useIDEStore(
+    useShallow((state: IDEStore) => ({
+      commandOpen: state.commandOpen,
+      setCommandOpen: state.setCommandOpen,
+      tree: state.tree,
+      openFile: state.openFile,
+      toggleExplorer: state.toggleExplorer,
+      toggleAi: state.toggleAi,
+      toggleBottom: state.toggleBottom,
+      saveActive: state.saveActive,
+    })),
+  );
   const navigate = useNavigate();
 
   // Memoize the flattened files so we don't recalculate on every render

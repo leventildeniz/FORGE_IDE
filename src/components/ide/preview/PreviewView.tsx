@@ -14,7 +14,7 @@ import {
   XCircle,
   Camera,
 } from "lucide-react";
-import { useIDEStore } from "@/stores/ide-store";
+import { IDEStore, useIDEStore } from "@/stores/ide-store";
 import { useShallow } from "zustand/react/shallow";
 import type { PreviewDevice } from "@/types/ide";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -47,21 +47,23 @@ export function PreviewView() {
     previewForward,
     previewRefresh,
     addPendingAttachment,
-  } = useIDEStore(useShallow((state) => ({
-    previewUrl: state.previewUrl,
-    previewDevice: state.previewDevice,
-    previewRunning: state.previewRunning,
-    previewHistory: state.previewHistory,
-    previewHistoryIndex: state.previewHistoryIndex,
-    systemMessages: state.systemMessages,
-    setPreviewUrl: state.setPreviewUrl,
-    setPreviewDevice: state.setPreviewDevice,
-    togglePreviewRunning: state.togglePreviewRunning,
-    previewBack: state.previewBack,
-    previewForward: state.previewForward,
-    previewRefresh: state.previewRefresh,
-    addPendingAttachment: state.addPendingAttachment,
-  })));
+  } = useIDEStore(
+    useShallow((state: IDEStore) => ({
+      previewUrl: state.previewUrl,
+      previewDevice: state.previewDevice,
+      previewRunning: state.previewRunning,
+      previewHistory: state.previewHistory,
+      previewHistoryIndex: state.previewHistoryIndex,
+      systemMessages: state.systemMessages,
+      setPreviewUrl: state.setPreviewUrl,
+      setPreviewDevice: state.setPreviewDevice,
+      togglePreviewRunning: state.togglePreviewRunning,
+      previewBack: state.previewBack,
+      previewForward: state.previewForward,
+      previewRefresh: state.previewRefresh,
+      addPendingAttachment: state.addPendingAttachment,
+    })),
+  );
 
   const [draft, setDraft] = useState(previewUrl);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -72,14 +74,14 @@ export function PreviewView() {
   const handleCapture = async () => {
     if (!previewUrl) return;
     setIsCapturing(true);
-    
+
     try {
       const wsManager = getWebSocketManager();
       const response = await wsManager.sendRequest({
         type: BackendRequestType.TakeScreenshot,
         payload: { url: previewUrl },
       });
-      
+
       if (response.type === BackendResponseType.TakeScreenshotResponse) {
         // Convert base64 data URL to a File object
         const base64Data = response.payload.base64.split(",")[1];
@@ -91,7 +93,7 @@ export function PreviewView() {
         const byteArray = new Uint8Array(byteNumbers);
         const blob = new Blob([byteArray], { type: "image/png" });
         const file = new File([blob], "preview_snapshot.png", { type: "image/png" });
-        
+
         addPendingAttachment(file);
       } else {
         console.error("Screenshot capture failed:", response);

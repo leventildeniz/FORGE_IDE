@@ -11,7 +11,7 @@ import { PreviewView } from "@/components/ide/preview/PreviewView";
 import { PublishView } from "@/components/ide/publish/PublishView";
 import { TelemetryView } from "@/components/ide/telemetry/TelemetryView";
 import { ConfigureView } from "@/components/ide/configure/ConfigureView";
-import { useIDEStore } from "@/stores/ide-store";
+import { IDEStore, useIDEStore } from "@/stores/ide-store";
 import { useShallow } from "zustand/react/shallow";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
@@ -45,22 +45,28 @@ function Workspace() {
     setCommandOpen,
     saveActive,
     initializeBackendConnection, // Get the new action from store
-  } = useIDEStore(useShallow((state) => ({
-    projectName: state.projectName,
-    projectRootPath: state.projectRootPath,
-    explorerOpen: state.explorerOpen,
-    aiOpen: state.aiOpen,
-    bottomOpen: state.bottomOpen,
-    bottomTab: state.bottomTab,
-    environments: state.environments,
-    activeEnvId: state.activeEnvId,
-    tabs: state.tabs,
-    workspaceView: state.workspaceView,
-    activePath: state.activePath,
-    saveActive: state.saveActive,
-    initializeBackendConnection: state.initializeBackendConnection,
-  })));
-const isAppLocked = useIDEStore((s) => s.isAppLocked);
+  } = useIDEStore(
+    useShallow((state: IDEStore) => ({
+      projectName: state.projectName,
+      projectRootPath: state.projectRootPath,
+      explorerOpen: state.explorerOpen,
+      aiOpen: state.aiOpen,
+      bottomOpen: state.bottomOpen,
+      bottomTab: state.bottomTab,
+      environments: state.environments,
+      activeEnvId: state.activeEnvId,
+      tabs: state.tabs,
+      workspaceView: state.workspaceView,
+      activePath: state.activePath,
+      saveActive: state.saveActive,
+      toggleExplorer: state.toggleExplorer,
+      toggleAi: state.toggleAi,
+      toggleBottom: state.toggleBottom,
+      setCommandOpen: state.setCommandOpen,
+      initializeBackendConnection: state.initializeBackendConnection,
+    })),
+  );
+  const isAppLocked = useIDEStore((s) => s.isAppLocked);
 
   useEffect(() => {
     initializeBackendConnection(); // Initialize backend connection on component mount

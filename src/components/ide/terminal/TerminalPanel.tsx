@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useIDEStore } from "@/stores/ide-store";
+import { IDEStore, useIDEStore } from "@/stores/ide-store";
 import { useShallow } from "zustand/react/shallow";
 import * as xterm from "@xterm/xterm";
 const { Terminal } = xterm;
@@ -20,16 +20,18 @@ export function TerminalPanel() {
     activeEnvId,
     environments,
     projectRootPath,
-  } = useIDEStore(useShallow((state) => ({
-    terminals: state.terminals,
-    activeTerminalId: state.activeTerminalId,
-    addTerminal: state.addTerminal,
-    removeTerminal: state.removeTerminal,
-    setActiveTerminal: state.setActiveTerminal,
-    activeEnvId: state.activeEnvId,
-    environments: state.environments,
-    projectRootPath: state.projectRootPath,
-  })));
+  } = useIDEStore(
+    useShallow((state: IDEStore) => ({
+      terminals: state.terminals,
+      activeTerminalId: state.activeTerminalId,
+      addTerminal: state.addTerminal,
+      removeTerminal: state.removeTerminal,
+      setActiveTerminal: state.setActiveTerminal,
+      activeEnvId: state.activeEnvId,
+      environments: state.environments,
+      projectRootPath: state.projectRootPath,
+    })),
+  );
 
   const handleAddTerminal = () => {
     const activeEnv = environments.find((e) => e.id === activeEnvId);
