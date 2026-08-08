@@ -15,6 +15,7 @@ Finalize "Forge IDE" v1.0 (a Local-First LLM-powered IDE). Complete Phase 8 (Har
 - **File Explorer Performance ✅:** Expanded the backend directory blacklists (`venv`, `.env`, `logs`, `.tanstack`, `__pycache__`) and replaced heavy `fs::metadata` calls with `entry.file_type()`. This dramatically reduced project load times for large repositories.
 - **AI Iteration & Reasoning Fixes ✅:** Increased tool iteration limit to 30. Fixed a bug where tool execution was prematurely triggered inside `<think>` blocks, causing infinite loops.
 - **Telemetry & Context Fixes ✅:** Resolved an integer underflow ("18 Trillion Tokens") in the Rust telemetry calculation. Fixed "Compact Chat" logic to send only the compacted summary payload to the LLM instead of deleting messages permanently from the database.
+- **UI Tweaks & Settings Crash Fix ✅:** Fixed a React render crash on the Settings/Publish pages caused by incorrect shallow binding. Updated the global `EnvBadge` to display "Connected" status accurately based on active environment (SSH vs Local/WSL).
 
 **Context**
 - **Architecture:** Rust backend (`forge-backend/`) + React/TypeScript/Zustand frontend (`src/`).

@@ -104,13 +104,14 @@ const envIcon: Record<EnvironmentKind, React.ComponentType<{ className?: string 
 };
 
 function EnvironmentsPane() {
-  const { environments, activeEnvId, setActiveEnv, addEnvironment, removeEnvironment } =
+  const { environments, activeEnvId, setActiveEnv, addEnvironment, removeEnvironment, isConnected } =
     useIDEStore(useShallow((state) => ({
       environments: state.environments,
       activeEnvId: state.activeEnvId,
       setActiveEnv: state.setActiveEnv,
       addEnvironment: state.addEnvironment,
       removeEnvironment: state.removeEnvironment,
+      isConnected: state.isConnected,
     })));
   return (
     <section className="space-y-4">
@@ -123,6 +124,12 @@ function EnvironmentsPane() {
         {environments.map((e) => {
           const Icon = envIcon[e.kind];
           const active = activeEnvId === e.id;
+          
+          // Only show 'connected' status if the environment is actually active AND connected.
+          // Otherwise, it appears as disconnected/inactive.
+          const isEnvConnected = active && (e.kind === "ssh" ? e.status === "connected" : isConnected);
+          const displayStatus = isEnvConnected ? "connected" : "disconnected";
+
           return (
             <li
               key={e.id}
@@ -141,15 +148,15 @@ function EnvironmentsPane() {
                   </span>
                   <span
                     className={`inline-flex items-center gap-1 text-[10px] ${
-                      e.status === "connected" ? "text-emerald-400" : "text-muted-foreground"
+                      isEnvConnected ? "text-emerald-400" : "text-muted-foreground"
                     }`}
                   >
                     <span
                       className={`size-1.5 rounded-full ${
-                        e.status === "connected" ? "bg-emerald-500" : "bg-muted-foreground/60"
+                        isEnvConnected ? "bg-emerald-500" : "bg-muted-foreground/60"
                       }`}
                     />
-                    {e.status}
+                    {displayStatus}
                   </span>
                 </div>
                 <div className="truncate text-xs text-muted-foreground">{e.detail}</div>
