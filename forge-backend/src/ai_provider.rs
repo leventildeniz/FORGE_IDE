@@ -1321,7 +1321,8 @@ MANDATORY WORKFLOW:
                                 }
 
                                 // Send the special markdown block to render an inline terminal
-                                ui_feedback = format!("```forge-terminal\n{}\n```\n", term_id);
+                                // Also send a 'flush' signal so the frontend renders it immediately before we block.
+                                ui_feedback = format!("```forge-terminal\n{}\n```\n\n", term_id);
                                 let _ = send_chunk(ui_feedback, false, &request_id, &client_sender);
                                 ui_feedback = String::new(); // Don't send again below
 

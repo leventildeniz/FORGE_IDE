@@ -329,6 +329,7 @@ let streamBuffer: Record<string, string> = {};
 let lastStreamUpdate = 0;
 let streamStartTime = 0;
 let streamGenChars = 0;
+let streamFlushTimeout: ReturnType<typeof setTimeout> | null = null;
 
 export const useIDEStore = create<IDEStore>()(
   persist(
