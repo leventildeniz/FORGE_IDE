@@ -605,7 +605,7 @@ export const useIDEStore = create<IDEStore>()(
               // Dynamic throttle: 30ms for small texts, up to 100ms for massive texts
               const throttle = Math.min(100, Math.max(30, Math.floor(currentLen / 200)));
 
-              if (now - lastStreamUpdate > throttle || isDone) {
+              if (now - lastStreamUpdate > throttle || isDone || chunk.includes("forge-terminal")) {
                 lastStreamUpdate = now;
 
                 const elapsedSec = (now - streamStartTime) / 1000;
