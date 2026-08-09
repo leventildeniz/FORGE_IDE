@@ -626,14 +626,44 @@ export const useIDEStore = create<IDEStore>()(
                   const newMessages = state.messages.map((m) => {
                     const bufferChunk = streamBuffer[msgId];
                     if (m.id === msgId && bufferChunk) {
-                      // Determine current raw text
+                      // Only update rawContent during streaming, avoid deep part mapping
                       const textPart = m.parts.find((p) => p.type === "text") as any;
                       let currentText =
                         m.rawContent !== undefined ? m.rawContent : textPart ? textPart.text : "";
                       const newText = currentText + bufferChunk;
 
-                      // Parse newText for <think>, <thought>, <reasoning>, or <|think|> blocks so they stream live
-                      // Only match if the tag appears at the start of a line (to prevent matching <think> inside inline code)
+                      if (!isDone) {
+                         // Fast path: Just append to raw content and avoid complex regex
+                         // We will rely on ReactMarkdown's fast inline parser for the live stream
+                         const partsWithoutText = m.parts.filter(p => p.type !== "text" && p.type !== "thinking");
+                         
+                         // Extremely fast <think> tag detector that avoids Regex overhead
+                         const thinkStart = newText.lastIndexOf("<think>");
+                         const thinkEnd = newText.lastIndexOf("</think>");
+                         
+                         if (thinkStart !== -1 && (thinkEnd === -1 || thinkStart > thinkEnd)) {
+                             // We are actively inside a think block!
+                             return {
+                                 ...m,
+                                 rawContent: newText,
+                                 parts: [
+                                     ...partsWithoutText,
+                                     { type: "text", text: newText.substring(0, thinkStart) },
+                                     { type: "thinking", text: newText.substring(thinkStart + 7) }
+                                 ]
+                             }
+                         }
+
+                         // Standard text flow
+                         return {
+                             ...m,
+                             rawContent: newText,
+                             parts: [...partsWithoutText, { type: "text", text: newText }]
+                         };
+                      }
+
+                      // Only run the full heavy regex parsing once `isDone` is true
+                      // Parse newText for <think>, <thought>, <reasoning>, or <|think|> blocks
                       const thinkRegex =
                         /(?:^|\n)\s*<\|?(?:think|thought|reasoning)\|?>([\s\S]*?)(?:<\|?\/(?:think|thought|reasoning)\|?>|$)/gi;
                       let thinkMatch;
