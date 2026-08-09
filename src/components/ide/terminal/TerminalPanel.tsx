@@ -149,6 +149,7 @@ export function XTermInstance({ terminalId }: { terminalId: string }) {
     setTimeout(() => {
       try {
         fitAddon.fit();
+        term.focus(); // Focus automatically so the user can start typing
         getWebSocketManager().sendRequest({
           type: BackendRequestType.ResizeTerminal,
           payload: {

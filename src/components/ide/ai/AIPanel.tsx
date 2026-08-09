@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { LocalErrorBoundary } from "./ErrorBoundary";
 import { XTermInstance } from "../terminal/TerminalPanel";
 import {
   Send,
@@ -954,13 +955,14 @@ const Message = React.memo(function Message({
               }`}
             >
               {message.parts.map((p, i) => (
-                <PartView
-                  key={i}
-                  part={p}
-                  onReview={onReview}
-                  isUser={isUser}
-                  isGenerating={!isUser && isLast && streaming}
-                />
+                <LocalErrorBoundary key={i} name={`Message Part ${i}`}>
+                  <PartView
+                    part={p}
+                    onReview={onReview}
+                    isUser={isUser}
+                    isGenerating={!isUser && isLast && streaming}
+                  />
+                </LocalErrorBoundary>
               ))}
 
               {!isUser &&
@@ -1183,10 +1185,12 @@ const CodeBlock = React.memo(function CodeBlock({ code, language, isGenerating }
       <div className="my-3 overflow-hidden rounded-md border border-border bg-[#1e1e1e] shadow-sm">
         <div className="flex items-center justify-between border-b border-white/10 bg-[#2d2d2d] px-3 py-1.5 text-[10px] uppercase tracking-wider text-gray-400">
           <span className="font-semibold text-green-400">Interactive Terminal</span>
-          <span className="text-xs text-muted-foreground">Type here to interact...</span>
+          <span className="text-xs text-muted-foreground">Click here to interact (sudo hides passwords)...</span>
         </div>
         <div className="h-[250px] w-full relative">
-          <XTermInstance terminalId={termId} />
+          <LocalErrorBoundary name="XTermInstance">
+            <XTermInstance terminalId={termId} />
+          </LocalErrorBoundary>
         </div>
       </div>
     );
