@@ -17,21 +17,9 @@ A previous AI session executed destructive git commands (`git stash`, `git check
 - **NO GIT COMMANDS:** Absolutely do not use `git stash`, `git checkout`, `git restore`, or `git reset`. The local state must be treated as extremely fragile.
 - **NO AUTOMATED REWRITES:** Do not try to "fix" everything at once. Wait for the user to direct the recovery step-by-step.
 
-## 🛠️ Recovery Action Plan (When User is Ready)
-When a new session is started and the user instructs you to begin recovery, follow these steps strictly:
-
-1. **Fix `workspace.tsx` & `AIPanel.tsx`:** 
-   - Audit all `useIDEStore` calls.
-   - Wrap *every* destructuring with `useShallow` to prevent full-app re-renders (e.g., `useIDEStore(useShallow((state) => ({ ... })))`).
-2. **Bypass Markdown Parsing on Stream:** 
-   - In `AIPanel.tsx`, ensure that while `isGenerating` is true, large code blocks and markdown do not use `SyntaxHighlighter`. Fall back to raw `<pre><code>` tags.
-   - Wrap `ChangeSetCard` and `CodeBlock` in `React.memo`.
-3. **Fix File Explorer:** 
-   - Ensure `TreeNode` in `FileExplorer.tsx` is wrapped in `React.memo`.
-4. **Stabilize Terminal Component:** 
-   - Ensure the regex for the custom terminal markdown block is `/language-([\w-]+)/` to match `forge-terminal`.
-   - Prevent `XTermInstance` from unmounting during active stream.
-
-## ✅ What IS Working (Do not break)
-- The Rust backend (`terminal.rs`, `ai_provider.rs`) successfully spawns an interactive PTY via `spawn_agent_terminal` and sends ````forge-terminal\n<term_id>\n```` blocks.
-- The `ide-store.ts` correctly implements `forgeTerminalBuffers` to catch fast WebSocket outputs before the terminal UI mounts.
+## ✅ Current State (Stable)
+- **Interactive Terminal:** Fixed the severe UI deadlock where the `forge-terminal` UI component was trapped behind Zustand's stream-throttling buffer. AI tools that require interactive inputs (like `sudo`) now bypass the throttle and render instantly (`flushStreamBuffer`), preventing backend 45s timeouts.
+- **UI Crash Immunity:** Wrapped `PartView` and `XTermInstance` with a custom `LocalErrorBoundary`. If a markdown parsing or layout shift error occurs during heavy token streams, the app will gracefully display a red "UI Crash" box on that specific message block instead of tearing down the entire `Workspace`.
+- **Send Button Unlocked:** The "Send" button is no longer locked out when the AI is streaming. Users can now queue up follow-up messages while the AI is typing.
+- **Removed Lovable:** Completely purged all Lovable remnants, configs, and dependencies. Restored raw TanStack Start and standard Vite configurations.
+- **Context Limit Fixed:** The UI now dynamically respects the actual model's `contextWindow` limit (e.g., 128k) instead of hardlocking at 8192 tokens.
