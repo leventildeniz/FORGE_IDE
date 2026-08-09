@@ -638,19 +638,33 @@ export const useIDEStore = create<IDEStore>()(
                          const partsWithoutText = m.parts.filter(p => p.type !== "text" && p.type !== "thinking");
                          
                          // Extremely fast <think> tag detector that avoids Regex overhead
-                         const thinkStart = newText.lastIndexOf("<think>");
+                         const thinkStart = newText.indexOf("<think>");
                          const thinkEnd = newText.lastIndexOf("</think>");
                          
-                         if (thinkStart !== -1 && (thinkEnd === -1 || thinkStart > thinkEnd)) {
-                             // We are actively inside a think block!
-                             return {
-                                 ...m,
-                                 rawContent: newText,
-                                 parts: [
-                                     ...partsWithoutText,
-                                     { type: "text", text: newText.substring(0, thinkStart) },
-                                     { type: "thinking", text: newText.substring(thinkStart + 7) }
-                                 ]
+                         if (thinkStart !== -1) {
+                             if (thinkEnd === -1 || thinkStart > thinkEnd) {
+                                // We are actively inside an unclosed think block!
+                                return {
+                                    ...m,
+                                    rawContent: newText,
+                                    parts: [
+                                        ...partsWithoutText,
+                                        { type: "text", text: newText.substring(0, thinkStart) },
+                                        { type: "thinking", text: newText.substring(thinkStart + 7) }
+                                    ]
+                                }
+                             } else {
+                                // Think block is closed, show text after it
+                                return {
+                                    ...m,
+                                    rawContent: newText,
+                                    parts: [
+                                        ...partsWithoutText,
+                                        { type: "text", text: newText.substring(0, thinkStart) },
+                                        { type: "thinking", text: newText.substring(thinkStart + 7, thinkEnd) },
+                                        { type: "text", text: newText.substring(thinkEnd + 8) }
+                                    ]
+                                }
                              }
                          }
 
