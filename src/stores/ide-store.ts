@@ -770,6 +770,7 @@ export const useIDEStore = create<IDEStore>()(
                               "terminal",
                               "powershell",
                               "cmd",
+                              "forge-terminal",
                             ];
                             const isIgnoredLang = ignoreLangs.includes(lang.toLowerCase().trim());
 

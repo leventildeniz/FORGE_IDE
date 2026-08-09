@@ -834,7 +834,7 @@ export function AIPanel() {
               <Button
                 size="sm"
                 onClick={submit}
-                disabled={streaming || !input.trim() || tokenPercentage >= 100}
+                disabled={(!input.trim() && pendingAttachments.length === 0 && contextPills.length === 0) || tokenPercentage >= 100}
                 className="h-7 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 px-3 shadow-sm font-medium gap-1"
               >
                 Send <Send className="size-3 ml-1" />
