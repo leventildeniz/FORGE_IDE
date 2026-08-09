@@ -635,44 +635,56 @@ export const useIDEStore = create<IDEStore>()(
                       if (!isDone) {
                          // Fast path: Just append to raw content and avoid complex regex
                          // We will rely on ReactMarkdown's fast inline parser for the live stream
-                         const partsWithoutText = m.parts.filter(p => p.type !== "text" && p.type !== "thinking");
+                         const partsWithoutText = m.parts.filter(p => p.type !== "text" && p.type !== "thinking" && p.type !== "code");
+                         
+                         // Determine if we have a forge-terminal codeblock active
+                         let tempParts: any[] = [];
+                         let currentTextToParse = newText;
                          
                          // Extremely fast <think> tag detector that avoids Regex overhead
-                         const thinkStart = newText.indexOf("<think>");
-                         const thinkEnd = newText.lastIndexOf("</think>");
+                         const thinkStart = currentTextToParse.indexOf("<think>");
+                         const thinkEnd = currentTextToParse.lastIndexOf("</think>");
                          
                          if (thinkStart !== -1) {
                              if (thinkEnd === -1 || thinkStart > thinkEnd) {
                                 // We are actively inside an unclosed think block!
-                                return {
-                                    ...m,
-                                    rawContent: newText,
-                                    parts: [
-                                        ...partsWithoutText,
-                                        { type: "text", text: newText.substring(0, thinkStart) },
-                                        { type: "thinking", text: newText.substring(thinkStart + 7) }
-                                    ]
-                                }
+                                tempParts.push({ type: "text", text: currentTextToParse.substring(0, thinkStart) });
+                                tempParts.push({ type: "thinking", text: currentTextToParse.substring(thinkStart + 7) });
+                                currentTextToParse = ""; // Consumed
                              } else {
                                 // Think block is closed, show text after it
-                                return {
-                                    ...m,
-                                    rawContent: newText,
-                                    parts: [
-                                        ...partsWithoutText,
-                                        { type: "text", text: newText.substring(0, thinkStart) },
-                                        { type: "thinking", text: newText.substring(thinkStart + 7, thinkEnd) },
-                                        { type: "text", text: newText.substring(thinkEnd + 8) }
-                                    ]
-                                }
+                                tempParts.push({ type: "text", text: currentTextToParse.substring(0, thinkStart) });
+                                tempParts.push({ type: "thinking", text: currentTextToParse.substring(thinkStart + 7, thinkEnd) });
+                                currentTextToParse = currentTextToParse.substring(thinkEnd + 8);
                              }
                          }
 
-                         // Standard text flow
+                         // Extract forge-terminal block so it bypasses markdown parser and renders XTerm immediately
+                         if (currentTextToParse) {
+                             const terminalStart = currentTextToParse.indexOf("```forge-terminal");
+                             if (terminalStart !== -1) {
+                                 const terminalEnd = currentTextToParse.indexOf("```", terminalStart + 17);
+                                 if (terminalEnd !== -1 && terminalEnd > terminalStart) {
+                                     // Terminal block is closed
+                                     tempParts.push({ type: "text", text: currentTextToParse.substring(0, terminalStart) });
+                                     const termId = currentTextToParse.substring(terminalStart + 17, terminalEnd).trim();
+                                     tempParts.push({ type: "code", language: "forge-terminal", code: termId });
+                                     tempParts.push({ type: "text", text: currentTextToParse.substring(terminalEnd + 3) });
+                                 } else {
+                                     // Terminal block is open
+                                     tempParts.push({ type: "text", text: currentTextToParse.substring(0, terminalStart) });
+                                     const termId = currentTextToParse.substring(terminalStart + 17).trim();
+                                     tempParts.push({ type: "code", language: "forge-terminal", code: termId });
+                                 }
+                             } else {
+                                 tempParts.push({ type: "text", text: currentTextToParse });
+                             }
+                         }
+
                          return {
                              ...m,
                              rawContent: newText,
-                             parts: [...partsWithoutText, { type: "text", text: newText }]
+                             parts: [...partsWithoutText, ...tempParts].filter(p => p.text !== "" && p.code !== "")
                          };
                       }
 
