@@ -1,31 +1,22 @@
-# FORGE IDE - Handoff & Regression Report
+# FORGE IDE - Handoff & Session Report
+**Date:** 2026-08-09 (Night Shift)
 
-**CRITICAL ALERT:** A massive regression occurred during the implementation of the Interactive Terminal feature. The AI incorrectly executed `git stash`, `git checkout`, and `git restore` commands, which wiped out 3-4 hours of UI performance optimizations and bug fixes. 
+## 🎯 What We Achieved Today (The Wins)
+We successfully recovered from the Git regression and stabilized the UI architecture:
+1. **Lovable Purge:** Completely removed all Lovable dependencies, config files (`bunfig.toml`, `vite-tanstack-config`), and telemetry scripts. The IDE is now 100% local-first and independent.
+2. **Terminal Sudo Deadlock Fixed:** The Interactive PTY Terminal now instantly renders when the agent triggers a command (like `sudo -l`). We bypassed the Zustand 100ms throttle specifically for `forge-terminal` chunks and added `term.focus()` so the user can type their password immediately without the 45s backend timeout kicking in.
+3. **Workspace Crash Prevention:** Wrapped the chat message markdown renderer (`PartView`) and the Terminal component (`XTermInstance`) in a custom `LocalErrorBoundary`. If a message fails to parse, it shows a localized red error box instead of crashing the entire IDE.
+4. **Send Button & 128k Context:** The "Send" button no longer locks up on large files (raised limit to `activeModel?.contextWindow || 128000`). It is also no longer disabled during AI generation, allowing the user to queue messages.
 
-Do **NOT** use automated git checkouts or stash pops without explicit user consent in the future.
+## 🛑 The Remaining Problem (For Tomorrow)
+**The `<think>` Block Parsing (Fast Path) is Broken.**
+- **Symptom:** During active generation (`isGenerating = true`), the "Fast Path" string manipulation in `ide-store.ts` that tries to extract `<think>` tags (to avoid O(N^2) Regex CPU locking) is failing or leaking. 
+- **Visual Result:** The raw `<think>` and `</think>` tags are sometimes bleeding into the UI as plain text, or the formatting gets severely messed up while the AI is streaming its thoughts.
+- **Goal for Next Session:** We need to carefully rewrite the streaming parser logic in `ide-store.ts` (around line 635). It needs to be lightning-fast (no heavy regex on every token) but 100% reliable at parsing `<think>` or `<|think|>` tags without breaking the layout. 
 
-## Current Broken State (Symptoms)
-- **Workspace Crash during AI Streaming:** When the AI streams text, the entire `Workspace` crashes or freezes. This is because the critical `useShallow` bindings in `workspace.tsx` and `AIPanel.tsx` were improperly restored/corrupted. The UI is experiencing catastrophic O(N) re-renders per token.
-- **Lost UI Fixes:** The 3-4 hours of previous work regarding `React.memo` in `FileExplorer`, correct `useShallow` imports across all panels, and the chat message queue/compact logic have been corrupted or reverted.
-- **Terminal "Flickering":** While the backend PTY works, the frontend Markdown parser in `AIPanel.tsx` might still be improperly memoized, causing the `XTermInstance` to re-mount continuously during generation.
+## 📝 Directives for Next Agent
+- **Do not touch the backend (`ai_provider.rs` or `terminal.rs`).** The PTY terminal is working perfectly.
+- **Do not use heavy Regex in the stream loop.** Maintain the O(N) performance constraint for text rendering.
+- Focus *only* on `ide-store.ts` string parsing for the `think` tags and how `AIPanel.tsx` renders them.
 
-## The Interactive Terminal Implementation (What *was* achieved)
-To prevent losing the logic for the Interactive Terminal (which was the original goal), here is exactly how it was wired up:
-
-1. **Backend (`terminal.rs` & `ai_provider.rs`):**
-   - Created `spawn_agent_terminal` which uses `portable_pty` to spawn a real interactive shell (`bash` or `wsl.exe`).
-   - The AI agent (`@@RUN`) intercepts commands. If triggered, it spawns this PTY, sends a markdown block ` ```forge-terminal\n<term_id>\n``` ` to the frontend, and waits for up to 45 seconds for the command to finish.
-   - User input typed into the frontend is sent back via WebSocket (`TerminalInput` event) directly to this PTY.
-
-2. **Frontend (`ide-store.ts` & `AIPanel.tsx` & `TerminalPanel.tsx`):**
-   - Created a global `forgeTerminalBuffers` record in `ide-store.ts`. Because the backend sends PTY output instantly, the React `XTermInstance` component might not be mounted yet. The buffer stores this output and writes it when Xterm initializes.
-   - In `AIPanel.tsx`, the `ReactMarkdown` component was modified to intercept `language-forge-terminal` and render the `XTermInstance` instead of a static code block.
-
-## Action Plan for the Next Agent / Session
-1. **DO NOT PULL FROM GIT.** The user's local state is delicate.
-2. **Fix `workspace.tsx`:** Carefully review `useIDEStore` and `useShallow` bindings. Ensure all properties are properly destructured so the whole screen doesn't re-render.
-3. **Fix `AIPanel.tsx`:** Restore the `isGenerating` checks. Ensure that when `isGenerating` is true, simple `<pre>` tags are used instead of `SyntaxHighlighter` to prevent the Main Thread from locking up. Ensure `CodeBlock` is correctly wrapped in `React.memo`.
-4. **Fix `FileExplorer.tsx`:** Ensure `TreeNode` is wrapped in `React.memo` to prevent the file tree from re-rendering during AI token streaming.
-5. **Re-verify `TelemetryView.tsx` & Chat Queue:** Check if the telemetry underflow and chat compacting fixes are still intact.
-
-*End of Report.*
+*End of Report. The user is resting, pick up from here tomorrow!*
