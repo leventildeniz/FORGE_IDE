@@ -642,20 +642,26 @@ export const useIDEStore = create<IDEStore>()(
                          let currentTextToParse = newText;
                          
                          // Extremely fast <think> tag detector that avoids Regex overhead
-                         const thinkStart = currentTextToParse.indexOf("<think>");
-                         const thinkEnd = currentTextToParse.lastIndexOf("</think>");
+                         let thinkStart = currentTextToParse.indexOf("<think>");
+                         if (thinkStart === -1) thinkStart = currentTextToParse.indexOf("<|think|>");
+                         
+                         let thinkEnd = currentTextToParse.lastIndexOf("</think>");
+                         if (thinkEnd === -1) thinkEnd = currentTextToParse.lastIndexOf("</|think|>");
                          
                          if (thinkStart !== -1) {
+                             const tagLength = currentTextToParse.startsWith("<|think|>", thinkStart) ? 9 : 7;
+                             const endTagLength = currentTextToParse.includes("</|think|>") ? 10 : 8;
+
                              if (thinkEnd === -1 || thinkStart > thinkEnd) {
                                 // We are actively inside an unclosed think block!
                                 tempParts.push({ type: "text", text: currentTextToParse.substring(0, thinkStart) });
-                                tempParts.push({ type: "thinking", text: currentTextToParse.substring(thinkStart + 7) });
+                                tempParts.push({ type: "thinking", text: currentTextToParse.substring(thinkStart + tagLength) });
                                 currentTextToParse = ""; // Consumed
                              } else {
                                 // Think block is closed, show text after it
                                 tempParts.push({ type: "text", text: currentTextToParse.substring(0, thinkStart) });
-                                tempParts.push({ type: "thinking", text: currentTextToParse.substring(thinkStart + 7, thinkEnd) });
-                                currentTextToParse = currentTextToParse.substring(thinkEnd + 8);
+                                tempParts.push({ type: "thinking", text: currentTextToParse.substring(thinkStart + tagLength, thinkEnd) });
+                                currentTextToParse = currentTextToParse.substring(thinkEnd + endTagLength);
                              }
                          }
 

@@ -1122,7 +1122,7 @@ const PartView = React.memo(function PartView({
 
   if (part.type === "thinking") {
     return (
-      <details open className="mb-3 group rounded-md border border-white/5 bg-[#1e1e20]/50 text-sm text-muted-foreground italic max-w-full overflow-hidden">
+      <details open={isGenerating} className="mb-3 group rounded-md border border-white/5 bg-[#1e1e20]/50 text-sm text-muted-foreground italic max-w-full overflow-hidden">
         <summary className="flex cursor-pointer select-none items-center gap-2 p-2.5 opacity-70 transition-opacity hover:opacity-100 outline-none">
           <ChevronRight className="size-3.5 transition-transform group-open:rotate-90" />
           <span className="text-[11px] font-medium not-italic uppercase tracking-wider flex items-center gap-2">
